@@ -1,0 +1,60 @@
+<style>
+h1 {
+    margin: 1em 0 0 0;
+    color: #2e484c;
+    font-family: 'Julius Sans One', sans-serif;
+    font-size: 1.8em;
+}
+a:link {
+    font-weight: bold;
+    text-decoration: none;
+    color: #0d8ba1;
+}
+a:visited {
+    font-weight: bold;
+    text-decoration: none;
+    color: #1a5952;
+}
+a:hover, a:focus, a:active {
+    text-decoration: underline;
+    color: #9685BA;
+}
+p {
+    font: "Libre Baskerville", sans-serif;
+    text-align: justify;
+    text-justify: inter-word;
+    width: 95%;
+    max-width: 2000;
+}
+
+</style>
+
+<h1>An Interactive Fitting Tool for Continuous Enzyme Kinetics</h1>
+
+<p>
+  Interact with the widgets on the left to select individual samples to optimize linear fits, select blank sample to subtract and update
+  the model fit. Enter Python format equations* to apply a transform to the model fit. The slider and text input boxes below the progress
+  curve residual plot can be used to refit based on a new X-axis range.
+</p>
+  Use the figure tools at the upper right of each plot to pan
+<div style="padding: 0px; display:inline-block;" id="F51F2A2DE91D4BAAAFFC36956CAC3C39" class="bk-toolbar-button bk-tool-icon-box-select" title="Box Select (x-axis)"></div>
+  , wheel zoom
+<div style="padding: 0px; display:inline-block;" id="FE7521761B7E4257A8E5686B92CF631A" class="bk-toolbar-button bk-tool-icon-wheel-zoom" title="Wheel Zoom"></div>
+  , refresh the plot
+<div style="padding: 0px; display:inline-block;" id="CAE1E6E8AC844A0E81C302226A701502" class="bk-toolbar-button bk-tool-icon-reset" title="Reset"></div>
+  , download plot to image file
+<div style="padding: 0px; display:inline-block;" id="A45C17B5DE5649E2A4E667213B52E75F" class="bk-toolbar-button bk-tool-icon-save" title="Save"></div>
+  and hover over the circles on the model fit plot to see sample information
+<div style="padding: 0px; display:inline-block;" id="C5184523E53B477294F5C730174D8BE2" class="bk-toolbar-button bk-tool-icon-hover" title="Hover"></div>
+  .
+<p>
+<br>Click the green button to upload data files of your own. Click the blue buttons to download the slope table to a csv file or save it to the clipboard.
+</p>
+<p>
+  (Note: input data must be in csv format and is expected to be in columns with headings containing numbers denoting substrate/inhibitor concentrations
+  (or "blank" for sample to subtract). Some special characters may not be supported and could cause an error during file upload. The
+  "Time" column should contain integer or float values (not date-time).
+</p>
+<i>*See https://docs.python.org/3/tutorial/introduction.html for information about basic python numerical operators<br>
+  **The Python math library is also supported (https://docs.python.org/3.0/library/math.html)
+</i>

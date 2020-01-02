@@ -1,0 +1,41 @@
+.bk-root .bk-bs-btn-success {
+color: #FDFEFE;
+background-color: #37765d;
+border-color: #37765d;
+}
+.bk-root .bk-bs-btn-success:focus {
+color: #FDFEFE;
+background-color: #37765d;
+border-color: #37765d;
+}
+.bk-root .bk-bs-btn-success:active {
+color: #FDFEFE;
+background-color: #37765d;
+border-color: #37765d;
+}
+.bk-root .bk-bs-btn-success:hover {
+color: #FDFEFE;
+background-color: #37765d;
+border-color: #37765d;
+}
+
+.bk-root .bk-bs-btn-primary {
+color: #FDFEFE;
+background-color: #194775;
+border-color: #194775;
+}
+.bk-root .bk-bs-btn-primary:focus {
+color: #FDFEFE;
+background-color: #194775;
+border-color: #194775;
+}
+.bk-root .bk-bs-btn-primary:active {
+color: #FDFEFE;
+background-color: #194775;
+border-color: #194775;
+}
+.bk-root .bk-bs-btn-primary:hover {
+color: #FDFEFE;
+background-color: #194775;
+border-color: #194775;
+}
