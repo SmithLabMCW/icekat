@@ -5,7 +5,15 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.interpolate import UnivariateSpline
+from scipy.special import lambertw
+from lmfit import Model, Parameters
 from uncertainties import ufloat
+
+def subsetDf(df, start, end):
+
+    result = df[(df[df.columns[0]] >= float(start)) & (df[df.columns[0]] <= float(end))].dropna(axis=0)
+
+    return result
 
 def logWithZeros(x):
     '''
@@ -19,6 +27,15 @@ def logWithZeros(x):
             else:
                 out.append(np.log10(xi))
     return np.array(out)
+
+def SM(x, km, vmax):
+    '''
+    implementation of the Schnell-Mendoza equation using the scipy lambertw function
+    '''
+    t = x[0]
+    so = x[1]
+    z = so / km * np.exp(so / km - vmax / km * t)
+    return km * lambertw(z)
 
 def linear(x, m, b):
     '''
@@ -45,7 +62,7 @@ def icfit(x, bottom, top, slope, p50):
     return bottom + (top-bottom)/(1+10**((-p50-x)*slope))
 
 def spline_fit(x, y):
-    
+
     x, y = x.values, y.values
     spline = UnivariateSpline(x, y)(x)
     derivative = np.abs(np.diff(spline)/np.diff(x))
@@ -54,12 +71,14 @@ def spline_fit(x, y):
         indices = np.where(derivative > threshold)[0]
     except:
         indices = []
+
     while len(indices) < 4:
         threshold = threshold*0.9
         try:
             indices = np.where(derivative > threshold)[0]
         except:
             indices = []
+
     xi, yi = x[indices], y[indices]
     df = pd.DataFrame(data={'x' : xi, 'y' : yi}).sort_values('x').dropna()
     xi, yi = df.x, df.y
@@ -88,8 +107,8 @@ def linear_fit(x, y):
     return fit_dict
 
 def logarithmic_fit(x, y):
-    
-    popt, pcov = curve_fit(logarithmic, x, y, maxfev=100000)
+
+    popt, pcov = curve_fit(logarithmic, x, y, maxfev=10000)
     perr = np.sqrt(np.diag(pcov))
     xfit = np.linspace(np.min(x), np.max(x), len(x))
     yfit = logarithmic(xfit, *popt)
@@ -102,36 +121,127 @@ def logarithmic_fit(x, y):
 
     return fit_dict
 
+class sm_fit(object):
+
+    def __init__(self, database):
+
+        self.data = database
+
+    def fit(self, sample, transform, subtract):
+
+        ytmp = []
+        so, s, t = [], [], []
+        rix = (0, 0)
+        
+        if subtract in list(self.data):
+            concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", subtract)[0])
+            df = self.data[subtract].data
+            ts = df[df.columns[0]]
+            xs = df[df.columns[1]]
+            x = np.array([(concentration - (max(xs) - xi)) for xi in xs])
+            if 'x' in transform:
+                xs = eval(transform)
+            lmodel = Model(linear)
+            params = Parameters()
+            params.add(name="m", value=1)
+            params.add(name="b", value=0)
+            sub_line = lmodel.fit(xs, params, x=ts)
+            m = sub_line.params['m'].value
+            b = sub_line.params['b'].value
+        
+        for e in self.data:
+            if type(self.data[e]) == progress_curve:
+                concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", e)[0])
+                df = self.data[e].data
+                
+                if e == sample:
+                    rix = (len(t) + 1, len(t) + len(df))
+        
+                x = df[df.columns[1]]        
+                if 'x' in transform:
+                    x = eval(transform)
+                
+                ytmpi = [0]*len(x)
+                if subtract in list(self.data):
+                    ytmpi = [linear(xi, m, b) for xi in df[df.columns[0]]]
+                    x = [xi - linear(xi, m, b) for xi in x]
+                
+                sx = np.array([(concentration - (max(x) - xi) - yti) for xi, yti in zip(x, ytmpi)])
+                tx = np.array(df[df.columns[0]])
+                sox = np.array([concentration]*len(df))
+                for si, ti, soi, yti in zip(sx, tx, sox, ytmpi):
+                    so.append(soi)
+                    t.append(ti)
+                    s.append(si)
+                    ytmp.append(yti)
+        
+        x = np.array([t, so])
+        params = Parameters()
+        params.add(name="km", value=1)
+        params.add(name="vmax", value=1)
+        smodel = Model(SM)
+        result = smodel.fit(s, params, x=x, 
+                            nan_policy='propagate', method='least_squares')
+        km_val = result.params['km'].value
+        vmax_val = result.params['vmax'].value
+        km_err = result.params['km'].stderr
+        vmax_err = result.params['vmax'].stderr
+
+        fit_data = pd.DataFrame(data={
+            'Km' : ['%.2E' % Decimal(str(km_val)), '%.2E' % Decimal(str(km_err))],
+            'Vmax' : ['%.2E' % Decimal(str(vmax_val)), '%.2E' % Decimal(str(vmax_err))]
+        }, index=['value', 'error'])
+        
+        raw_data = pd.DataFrame(data={
+            'x' : t[rix[0]:rix[1]], 
+            'y' : s[rix[0]:rix[1]], 
+            'yfit' : result.best_fit[rix[0]:rix[1]].real,
+            'resi' : s[rix[0]:rix[1]] - result.best_fit[rix[0]:rix[1]].real,
+        })
+        
+        xfit = np.linspace(min(so), max(so), 1000)
+        model_result = pd.DataFrame(data={
+            'xfit' : xfit, 
+            'yfit' : [mmfit(xf, km_val, vmax_val) for xf in xfit]
+        })
+        
+        varea_data = pd.DataFrame(data={
+            'x' : xfit,
+            'r1' : [mmfit(xf, km_val + km_err, vmax_val - vmax_err) for xf in xfit],
+            'r2' : [mmfit(xf, km_val - km_err, vmax_val + vmax_err) for xf in xfit]})
+
+        return raw_data, model_result, fit_data, varea_data
+
+
+
 class progress_curve(object):
 
-    def __init__(self, dataframe):
+    def __init__(self, dataframe, start, end):
 
-        self.data = dataframe
+        df = subsetDf(dataframe, start, end)
+        self.data = df
 
-    def spline(self, start, end):
+    def spline(self):
 
-        df = self.data[(self.data[self.data.columns[0]] >= float(start)) &
-                       (self.data[self.data.columns[0]] <= float(end))].dropna(axis=0)
+        df = self.data
         x, y = df[df.columns[0]], df[df.columns[1]]
         spline = spline_fit(x, y)
         self.spline = spline
-        
+
         return self.spline
 
-    def linear(self, start, end):
+    def linear(self):
 
-        df = self.data[(self.data[self.data.columns[0]] >= float(start)) &
-                       (self.data[self.data.columns[0]] <= float(end))].dropna(axis=0)
+        df = self.data
         x, y = df[df.columns[0]], df[df.columns[1]]
         linear = linear_fit(x, y)
         self.linear = linear
-        
+
         return self.linear
-    
-    def logarithmic(self, start, end, offset):
-        
-        df = self.data[(self.data[self.data.columns[0]] >= float(start)) &
-                       (self.data[self.data.columns[0]] <= float(end))].dropna(axis=0)
+
+    def logarithmic(self, offset):
+
+        df = self.data
         x, y = df[df.columns[0]], df[df.columns[1]]
         try:
             x = x + offset
@@ -147,8 +257,8 @@ class kinetic_model(object):
     def __init__(self, dictionary):
         self.dict = dictionary
 
-    def model(self, subtract, transform, threshold, bottom, top, slope, scalex):
-        
+    def model(self, subtract, transform, threshold, bottom, top, slope, scalex, offset):
+
         result = {}
         df = pd.DataFrame()
         for s in self.dict:
@@ -158,11 +268,20 @@ class kinetic_model(object):
                 else:
                     x = 0.0
                 if self.dict[s+'_fit'] == 0:
-                    sdf = self.dict[s].spline
+                    try:
+                        sdf = self.dict[s].spline()
+                    except:
+                        sdf = self.dict[s].spline
                 elif self.dict[s+'_fit'] == 1:
-                    sdf = self.dict[s].linear
+                    try:
+                        sdf = self.dict[s].linear()
+                    except:
+                        sdf = self.dict[s].linear
                 else:
-                    sdf = self.dict[s].logarithmic
+                    try:
+                        sdf = self.dict[s].logarithmic(offset)
+                    except:
+                        sdf = self.dict[s].logarithmic
                 df.at[s, 'rate'] = sdf['rate']
                 df.at[s, 'error'] = sdf['error']
                 df.at[s, 'x'] = x
@@ -205,9 +324,9 @@ class kinetic_model(object):
                 perr_mm = np.sqrt(np.diag(pcov_mm))
                 ymm = mmfit(xfit, *popt_mm)
                 result['yfit'] = ymm
-                result['Km'] = tuple(['%.2E' % Decimal(str(popt_mm[0])), 
+                result['Km'] = tuple(['%.2E' % Decimal(str(popt_mm[0])),
                                         '%.2E' % Decimal(str(perr_mm[0]))])
-                result['Vmax'] = tuple(['%.2E' % Decimal(str(popt_mm[1])), 
+                result['Vmax'] = tuple(['%.2E' % Decimal(str(popt_mm[1])),
                                         '%.2E' % Decimal(str(perr_mm[1]))])
             except:
                 result['xfit'] = []
@@ -262,7 +381,7 @@ class kinetic_model(object):
                                                  '%.2E' % Decimal(str(perr_ic[0]))])
                 result['Top'] = np.array(['%.2E' % Decimal(str(popt_ic[1])),
                                               '%.2E' % Decimal(str(perr_ic[1]))])
-                result['Slope'] = np.array(['%.2E' % Decimal(str(popt_ic[2])), 
+                result['Slope'] = np.array(['%.2E' % Decimal(str(popt_ic[2])),
                                             '%.2E' % Decimal(str(perr_ic[2]))])
                 result['p50'] = np.array(['%.2E' % Decimal(str(popt_ic[3])),
                                               '%.2E' % Decimal(str(perr_ic[3]))])
@@ -274,8 +393,8 @@ class kinetic_model(object):
                 result['Bottom'] = [np.nan, np.nan]
                 result['Top'] = [np.nan, np.nan]
                 result['Slope'] = [np.nan, np.nan]
-                result['p50'] = [np.nan, np.nan]               
-            
+                result['p50'] = [np.nan, np.nan]
+
         else:
             result['xt'] = np.linspace(1, len(n), len(n))
             result['yp'] = y
@@ -311,5 +430,5 @@ class kinetic_model(object):
                 popt_ic, pcov_ic = curve_fit(icfit, result['xp'], y, sigma=e, absolute_sigma=True, maxfev=100000)
                 yic = icfit(result['xfit'], *popt_ic)
                 result['yfit'] = yic
-            
+
         return self.result

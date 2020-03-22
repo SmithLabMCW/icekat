@@ -13,6 +13,7 @@ bokeh = "*"
 pandas = "*"
 xlrd = "*"
 scipy = "*"
+lmfit = "*"
 numpy = "*"
 uncertainties = "*"
 
