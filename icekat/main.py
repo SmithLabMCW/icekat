@@ -391,7 +391,8 @@ def load_page(experiment_df, experiment_db):
         output_filename = 'output.csv'
     global upload_button
     upload_button = Button(label="Upload Local File", button_type="success", width=350)
-    upload_button.callback = CustomJS(args=dict(file_source=file_source), code=open(join(dirname(__file__), "upload.js")).read())
+    callback = CustomJS(args=dict(file_source=file_source), code=open(join(dirname(__file__), "upload.js")).read())
+    upload_button.js_on_event('tap', callback)
 
     # table containing rate fits and errors
     template="""
@@ -435,14 +436,16 @@ def load_page(experiment_df, experiment_db):
     # button for copying rate data table to clipboard
     global copy_button
     copy_button = Button(label="Copy Table to Clipboard", button_type="primary", width=350)
-    copy_button.callback = CustomJS(args=dict(source=model_data_source),
+    callback = CustomJS(args=dict(source=model_data_source),
                                code=open(join(dirname(__file__), "copy.js")).read())
+    copy_button.js_on_event('tap', callback)
 
     # button for downloading rate data table to local csv file
     global download_button
     download_button = Button(label="Download Table to CSV", button_type="primary", width=350)
-    download_button.callback = CustomJS(args=dict(source=model_data_source, file_name=output_filename),
+    callback = CustomJS(args=dict(source=model_data_source, file_name=output_filename),
                                code=open(join(dirname(__file__), "download.js")).read())
+    download_button.js_on_event('tap', callback)
 
     ########## document formatting #########
 
