@@ -19,4 +19,4 @@ uncertainties = "*"
 
 [requires]
 
-python_version = "3.7.1"
+python_version = "3.6.8"
