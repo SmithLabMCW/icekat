@@ -445,7 +445,7 @@ def load_page(experiment_df, experiment_db):
     download_button = Button(label="Download Table to CSV", button_type="primary", width=350)
     callback = CustomJS(args=dict(source=model_data_source, file_name=output_filename),
                                code=open(join(dirname(__file__), "download.js")).read())
-    download_button.js_on_event('tap', callback)
+    download_button.js_on_event('click', callback)
 
     ########## document formatting #########
 
