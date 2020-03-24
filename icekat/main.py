@@ -5,8 +5,8 @@ import base64
 import pandas as pd
 import numpy as np
 from bokeh.io import curdoc
-from bokeh.layouts import row, column, widgetbox, layout
-from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker
+from bokeh.layouts import row, column, layout
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker, Column
 from bokeh.models.widgets import RadioButtonGroup, Select, TextInput, Button, DataTable, TableColumn, RangeSlider, Slider, HTMLTemplateFormatter, CheckboxButtonGroup
 from bokeh.plotting import figure
 
@@ -453,9 +453,9 @@ def load_page(experiment_df, experiment_db):
 
     advanced = Div(text="""<strong>Advanced Settings for \npEC/IC50 Analysis</strong>""")
 
-    widgets = widgetbox(model_select, sample_select, subtract_select,
+    widgets = Column(model_select, sample_select, subtract_select,
                         transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
-    table = widgetbox(rate_table)
+    table = Column(rate_table)
     main_row = row(column(upload_button, widgets),
                     column(fit_button, row(raw, model), resi, range_slider, row(start_time, end_time)),
                     column(download_button, copy_button, table, mm_table, ic_table, threshold_slider))
