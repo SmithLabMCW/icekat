@@ -5,18 +5,18 @@ import base64
 import pandas as pd
 import numpy as np
 from bokeh.io import curdoc
-from bokeh.layouts import row, column, layout
-from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker, Column
+from bokeh.layouts import row, column, widgetbox, layout
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker
 from bokeh.models.widgets import RadioButtonGroup, Select, TextInput, Button, DataTable, TableColumn, RangeSlider, Slider, HTMLTemplateFormatter, CheckboxButtonGroup
 from bokeh.plotting import figure
 
 ########## bokeh methods ##########
 def widget_callback(attrname, old, new):
-
+    
     start_e = float(start_time.value)
     stop_e = float(end_time.value)
     range_slider.value = (start_e, stop_e)
-
+    
     raw_title = raw.title.text
     resi_title = resi.title.text
     model_title = model.title.text
@@ -58,7 +58,7 @@ def sample_callback(attrname, old, new):
     stop = float(range_slider.end)
     start_e = float(start_time.value)
     stop_e = float(end_time.value)
-
+    
     if start_e != start or stop_e != stop:
         start_time.value = str(start)
         end_time.value = str(stop)
@@ -73,14 +73,14 @@ def slider_callback(attrname, old, new):
     stop_e = float(end_time.value)
     step = float(range_slider.step)
     end = float(range_slider.end)
-
+    
     if start >= stop -  5*step and stop <= end - 5*step:
         range_slider.value = (start, start + 5*step)
 
     elif start >= stop - 5*step and stop > end - 5*step:
         range_slider.value = (stop - 5*step, stop)
 
-    if start_e != start or stop_e != stop:
+    if start_e != start or stop_e != stop:   
         start_time.value = str(start)
         end_time.value = str(stop)
 
@@ -141,7 +141,7 @@ def update():
     experiment_db['model'] = model_eq
     pdf = experiment_df[[experiment_df.columns[0], sample]]
     experiment_db[sample] = ck.progress_curve(pdf, start, end)
-
+    
     if fit_routine == 3:
         raw.title.text = "Schnell-Mendoza Fit"
         resi.title.text = "Schnell-Mendoza Fit Residuals"
@@ -153,19 +153,19 @@ def update():
                                              yr = raw_data['resi'], yfit = raw_data['yfit'],
                                             )).to_dict('list')
         model_data_source.data = pd.DataFrame(data = dict(
-                                                    xt = [], yt = [], et = [],
+                                                    xt = [], yt = [], et = [], 
                                                     n = [], ct = []
                                                     )).to_dict('list')
         model_plot_source.data = pd.DataFrame(data = dict(
-                                                    xp = [], yp = [], u = [],
+                                                    xp = [], yp = [], u = [], 
                                                     l = [], ep = [], cp = []
                                                     )).to_dict('list')
         model_fit_source.data = pd.DataFrame(data = dict(
-                                                   x = model_result['xfit'],
+                                                   x = model_result['xfit'], 
                                                    y = model_result['yfit']
                                                    )).to_dict('list')
         varea_source.data = pd.DataFrame(data = dict(
-                                               x = varea_data['x'], r1 = varea_data['r1'],
+                                               x = varea_data['x'], r1 = varea_data['r1'], 
                                                r2 = varea_data['r2']
                                               )).to_dict('list')
         mm_source.data = pd.DataFrame(data = dict(
@@ -174,19 +174,19 @@ def update():
                                              Vmax = fit_data['Vmax']
                                            ), index=['value', 'error']).to_dict('list')
         ic_source.data = pd.DataFrame(data = dict(
-                                             label = [], Bottom = [], Top = [],
+                                             label = [], Bottom = [], Top = [], 
                                              Slope = [], p50 = []
                                            )).to_dict('list')
         model.xaxis.axis_label = 'Concentration'
         raw.yaxis.axis_label = 'Concentration'
 
     else:
-
+        
         raw.title.text = "Initial Rate Fit"
         resi.title.text = "Initial Rate Fit Residuals"
         varea_source.data = pd.DataFrame(data = dict( x = [], r1 = [], r2 = [] )).to_dict('list')
         raw.yaxis.axis_label = 'Signal'
-
+        
         if fit_routine == 0:
             progress_data = experiment_db[sample].spline()
             experiment_db[sample].spline = progress_data
@@ -203,7 +203,7 @@ def update():
             progress_data = experiment_db[sample].logarithmic(offset)
             experiment_db[sample].logarithmic = progress_data
 
-        raw_source.data = pd.DataFrame(data = dict(
+        raw_source.data = pd.DataFrame(data = dict( 
                                                 x = progress_data['x'],
                                                 y = progress_data['y'],
                                                 yr = progress_data['resi'],
@@ -215,16 +215,16 @@ def update():
             model_dict = ck.kinetic_model(experiment_db)
             model_result = model_dict.model(subtract, transform, threshold, bottom, top, slope, scalex, offset)
             model_data_source.data = pd.DataFrame(data = dict(
-                                                        xt = model_result['xt'],
-                                                        yt = model_result['yt'],
-                                                        et = model_result['et'],
+                                                        xt = model_result['xt'], 
+                                                        yt = model_result['yt'], 
+                                                        et = model_result['et'], 
                                                         n = model_result['n'],
                                                         ct = model_result['ct']
                                                        )).to_dict('list')
             model_plot_source.data = pd.DataFrame(data = dict(
-                                                        xp = model_result['xp'],
-                                                        yp = model_result['yp'],
-                                                        u = model_result['u'],
+                                                        xp = model_result['xp'], 
+                                                        yp = model_result['yp'], 
+                                                        u = model_result['u'], 
                                                         l = model_result['l'],
                                                         ep = model_result['ep'],
                                                         cp = model_result['cp']
@@ -241,7 +241,7 @@ def update():
                                                        Vmax = model_result['Vmax']
                                                    ), index=['value', 'error']).to_dict('list')
                 ic_source.data = pd.DataFrame(data = dict(
-                                                    label = [], Bottom = [], Top = [],
+                                                    label = [], Bottom = [], Top = [], 
                                                     Slope = [], p50 = []
                                                 )).to_dict('list')
                 model.xaxis.axis_label = 'Concentration'
@@ -249,7 +249,7 @@ def update():
             elif experiment_db['model'] == 'pEC50/pIC50':
                 ic_source.data = pd.DataFrame(data = dict(
                                                     label = ['Fit Value', 'Std. Error'],
-                                                    Bottom = model_result['Bottom'],
+                                                    Bottom = model_result['Bottom'], 
                                                     Top = model_result['Top'],
                                                     Slope = model_result['Slope'],
                                                     p50 = model_result['p50']
@@ -259,7 +259,7 @@ def update():
 
             else:
                 mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [] )).to_dict('list')
-                ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [],
+                ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [], 
                                                     Slope = [], p50 =[]
                                                    )).to_dict('list')
                 model.xaxis.axis_label = 'Sample #'
@@ -391,8 +391,8 @@ def load_page(experiment_df, experiment_db):
         output_filename = 'output.csv'
     global upload_button
     upload_button = Button(label="Upload Local File", button_type="success", width=350)
-    callback = CustomJS(args=dict(file_source=file_source), code=open(join(dirname(__file__), "upload.js")).read())
-    upload_button.js_on_event('tap', callback)
+    upload_button.callback = CustomJS(args=dict(file_source=file_source),
+                               code=open(join(dirname(__file__), "upload.js")).read())
 
     # table containing rate fits and errors
     template="""
@@ -436,16 +436,14 @@ def load_page(experiment_df, experiment_db):
     # button for copying rate data table to clipboard
     global copy_button
     copy_button = Button(label="Copy Table to Clipboard", button_type="primary", width=350)
-    callback = CustomJS(args=dict(source=model_data_source),
+    copy_button.callback = CustomJS(args=dict(source=model_data_source),
                                code=open(join(dirname(__file__), "copy.js")).read())
-    copy_button.js_on_event('tap', callback)
 
     # button for downloading rate data table to local csv file
     global download_button
     download_button = Button(label="Download Table to CSV", button_type="primary", width=350)
-    callback = CustomJS(args=dict(source=model_data_source, file_name=output_filename),
+    download_button.callback = CustomJS(args=dict(source=model_data_source, file_name=output_filename),
                                code=open(join(dirname(__file__), "download.js")).read())
-    download_button.js_on_event('click', callback)
 
     ########## document formatting #########
 
@@ -453,9 +451,9 @@ def load_page(experiment_df, experiment_db):
 
     advanced = Div(text="""<strong>Advanced Settings for \npEC/IC50 Analysis</strong>""")
 
-    widgets = Column(model_select, sample_select, subtract_select,
+    widgets = widgetbox(model_select, sample_select, subtract_select,
                         transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
-    table = Column(rate_table)
+    table = widgetbox(rate_table)
     main_row = row(column(upload_button, widgets),
                     column(fit_button, row(raw, model), resi, range_slider, row(start_time, end_time)),
                     column(download_button, copy_button, table, mm_table, ic_table, threshold_slider))
@@ -465,7 +463,7 @@ def load_page(experiment_df, experiment_db):
         [desc],
         [main_row]
     ], sizing_mode=sizing_mode)
-
+    
     update()
     curdoc().clear()
     curdoc().add_root(l)
@@ -483,7 +481,7 @@ def file_callback(attrname, old, new):
     global experiment_df
     experiment_df = pd.read_csv(file_io)
     experiment_df.columns = [str(i) for i in list(experiment_df)]
-
+    
     # update database
     global experiment_db
     experiment_db = dict(model = 'Michaelis-Menten')
@@ -494,7 +492,7 @@ def file_callback(attrname, old, new):
             df = experiment_df[[experiment_df.columns[0], s]].dropna(axis=0)
             experiment_db[s] = ck.progress_curve(df, xmin, xmax)
             experiment_db[s+'_fit'] = 0
-
+            
     # reload page
     load_page(experiment_df, experiment_db)
 
