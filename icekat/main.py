@@ -86,6 +86,22 @@ def slider_callback(attrname, old, new):
 
     update()
 
+def xbox_callback(attrname, old, new):
+
+    start = float(range_slider.value[0])
+    start_e = float(start_time.value)
+    stop = float(range_slider.value[1])
+    stop_e = float(end_time.value)
+    begin = float(range_slider.start)
+    step = float(range_slider.step)
+    end = float(range_slider.end)
+
+    if start_e != start or stop_e != stop:
+        if start_e >= begin and stop_e <= end:
+            range_slider.value = (start_e, stop_e)
+
+    update()
+
 def threshold_callback(attrname, old, new):
 
     if experiment_db['model'] == 'High-Throughput Screen':
@@ -363,8 +379,8 @@ def load_page(experiment_df, experiment_db):
     start_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[0]), title="Start Time")
     global end_time
     end_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[-1]), title='End Time')
-    start_time.on_change('value', slider_callback)
-    end_time.on_change('value', slider_callback)
+    start_time.on_change('value', xbox_callback)
+    end_time.on_change('value', xbox_callback)
 
     # range slider to select threshold for hit detection in HTS mode
     global threshold_slider
