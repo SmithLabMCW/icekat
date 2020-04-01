@@ -13,42 +13,9 @@ from bokeh.plotting import figure
 ########## bokeh methods ##########
 def widget_callback(attrname, old, new):
 
-    start_e = float(start_time.value)
-    stop_e = float(end_time.value)
-    range_slider.value = (start_e, stop_e)
-
-    raw_title = raw.title.text
-    resi_title = resi.title.text
-    model_title = model.title.text
-    raw.title.text = "Calculating..."
-    resi.title.text = "Calculating..."
-    model.title.text = "Calculating..."
-
-    fit_routine = fit_button.active
-    for s in experiment_df.columns[1:]:
-        df = experiment_df[[experiment_df.columns[0], s]]
-        xmin, xmax = min(df[df.columns[0]]), max(df[df.columns[0]])
-        experiment_db[s] = ck.progress_curve(df, xmin, xmax)
-        if fit_routine == 0:
-            progress_data = experiment_db[s].spline()
-            experiment_db[s].spline = progress_data
-            experiment_db[s+'_fit'] = 0
-        elif fit_routine == 1:
-            progress_data = experiment_db[s].linear()
-            experiment_db[s].linear = progress_data
-            experiment_db[s+'_fit'] = 1
-        #elif fit_routine == 2:
-        #    try:
-        #        offset = float(offset)
-        #    except:
-        #        offset = 0.0
-        #    progress_data = experiment_db[s].logarithmic(offset)
-        #    experiment_db[s].logarithmic = progress_data
-        #    experiment_db[s+'_fit'] = 2
-
-    raw.title.text = raw_title
-    resi.title.text = resi_title
-    model.title.text= model_title
+    start = float(start_time.value)
+    stop = float(end_time.value)
+    range_slider.value = (start, stop)
 
     update()
 
