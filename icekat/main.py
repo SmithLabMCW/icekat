@@ -118,14 +118,14 @@ def update():
     threshold = threshold_slider.value
     start = start_time.value
     end = end_time.value
-    
+
     model.title.text = model_eq
-    
+
     if 'x' in transform:
         raw.yaxis.axis_label = 'Concentration'
     else:
         raw.yaxis.axis_label = 'Concentration'
-        
+
     # update database
     experiment_db[sample+'_fit'] = fit_routine
     experiment_db['model'] = model_eq
@@ -133,26 +133,26 @@ def update():
     experiment_db[sample] = ck.progress_curve(pdf, start, end)
 
     if fit_routine == 3:
-        
+
         raw.title.text = "Schnell-Mendoza Fit"
         resi.title.text = "Schnell-Mendoza Fit Residuals"
         raw.title.text = "Schnell-Mendoza Fit"
         resi.title.text = "Schnell-Mendoza Fit Residuals"
         model_select.value = 'Michaelis-Menten'
         scalex_box.active = []
-        
+
         model_data_source.data = pd.DataFrame(data = dict(
                                 xt = [], yt = [], et = [],
                                 n = [], ct = []
                                 )).to_dict('list')
-        model_plot_source.data = pd.DataFrame(data = dict(xp = [], 
-                                yp = [], u = [], l = [], ep = [], 
+        model_plot_source.data = pd.DataFrame(data = dict(xp = [],
+                                yp = [], u = [], l = [], ep = [],
                                 cp = [])).to_dict('list')
         ic_source.data = pd.DataFrame(data = dict(
                                 label = [], Bottom = [], Top = [],
                                 Slope = [], p50 = []
                                 )).to_dict('list')
-            
+
         if 'x' in transform:
 
             raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
@@ -161,7 +161,7 @@ def update():
                                 y = model_result['yfit']
                                 )).to_dict('list')
             varea_source.data = pd.DataFrame(data = dict(
-                                x = varea_data['x'], 
+                                x = varea_data['x'],
                                 r1 = varea_data['r1'],
                                 r2 = varea_data['r2']
                                 )).to_dict('list')
@@ -176,8 +176,9 @@ def update():
                                                 )).to_dict('list')
 
         else:
-            raw.title.text = "Please enter signal to [substrate] transform!"
-            model.title.text = "(e.g. x/6.22/0.45/0.001 for sample data)"
+            raw.title.text = "Please enter transform equation!"
+            resi.title.text = "Must convert signal to [substrate] in Schnell-Mendoza mode (e.g. via x/6.22/0.45/0.001 for sample data)"
+            model.title.text = ""
             raw_source.data = pd.DataFrame(data = dict(
                                                  x = [], y = [],
                                                  yr = [], yfit = [],
@@ -187,7 +188,7 @@ def update():
                                 y = []
                                 )).to_dict('list')
             varea_source.data = pd.DataFrame(data = dict(
-                                x = [], 
+                                x = [],
                                 r1 = [],
                                 r2 = []
                                 )).to_dict('list')
@@ -196,7 +197,7 @@ def update():
                                 Km = ['', ''],
                                 Vmax = ['', '']
                                 ), index=['value', 'error']).to_dict('list')
-            
+
     else:
 
         raw.title.text = "Initial Rate Fit"
