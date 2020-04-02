@@ -118,7 +118,14 @@ def update():
     threshold = threshold_slider.value
     start = start_time.value
     end = end_time.value
-
+    
+    model.title.text = model_eq
+    
+    if 'x' in transform:
+        raw.yaxis.axis_label = 'Concentration'
+    else:
+        raw.yaxis.axis_label = 'Concentration'
+        
     # update database
     experiment_db[sample+'_fit'] = fit_routine
     experiment_db['model'] = model_eq
@@ -126,43 +133,70 @@ def update():
     experiment_db[sample] = ck.progress_curve(pdf, start, end)
 
     if fit_routine == 3:
+        
+        raw.title.text = "Schnell-Mendoza Fit"
+        resi.title.text = "Schnell-Mendoza Fit Residuals"
         raw.title.text = "Schnell-Mendoza Fit"
         resi.title.text = "Schnell-Mendoza Fit Residuals"
         model_select.value = 'Michaelis-Menten'
         scalex_box.active = []
-        raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
-        raw_source.data = pd.DataFrame(data = dict(
-                                             x = raw_data['x'], y = raw_data['y'],
-                                             yr = raw_data['resi'], yfit = raw_data['yfit'],
-                                            )).to_dict('list')
+        
         model_data_source.data = pd.DataFrame(data = dict(
-                                                    xt = [], yt = [], et = [],
-                                                    n = [], ct = []
-                                                    )).to_dict('list')
-        model_plot_source.data = pd.DataFrame(data = dict(
-                                                    xp = [], yp = [], u = [],
-                                                    l = [], ep = [], cp = []
-                                                    )).to_dict('list')
-        model_fit_source.data = pd.DataFrame(data = dict(
-                                                   x = model_result['xfit'],
-                                                   y = model_result['yfit']
-                                                   )).to_dict('list')
-        varea_source.data = pd.DataFrame(data = dict(
-                                               x = varea_data['x'], r1 = varea_data['r1'],
-                                               r2 = varea_data['r2']
-                                              )).to_dict('list')
-        mm_source.data = pd.DataFrame(data = dict(
-                                             label = ['Fit Value', 'Std. Error'],
-                                             Km = fit_data['Km'],
-                                             Vmax = fit_data['Vmax']
-                                           ), index=['value', 'error']).to_dict('list')
+                                xt = [], yt = [], et = [],
+                                n = [], ct = []
+                                )).to_dict('list')
+        model_plot_source.data = pd.DataFrame(data = dict(xp = [], 
+                                yp = [], u = [], l = [], ep = [], 
+                                cp = [])).to_dict('list')
         ic_source.data = pd.DataFrame(data = dict(
-                                             label = [], Bottom = [], Top = [],
-                                             Slope = [], p50 = []
-                                           )).to_dict('list')
-        model.xaxis.axis_label = 'Concentration'
-        raw.yaxis.axis_label = 'Concentration'
+                                label = [], Bottom = [], Top = [],
+                                Slope = [], p50 = []
+                                )).to_dict('list')
+            
+        if 'x' in transform:
 
+            raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
+            model_fit_source.data = pd.DataFrame(data = dict(
+                                x = model_result['xfit'],
+                                y = model_result['yfit']
+                                )).to_dict('list')
+            varea_source.data = pd.DataFrame(data = dict(
+                                x = varea_data['x'], 
+                                r1 = varea_data['r1'],
+                                r2 = varea_data['r2']
+                                )).to_dict('list')
+            mm_source.data = pd.DataFrame(data = dict(
+                                label = ['Fit Value', 'Std. Error'],
+                                Km = fit_data['Km'],
+                                Vmax = fit_data['Vmax']
+                                ), index=['value', 'error']).to_dict('list')
+            raw_source.data = pd.DataFrame(data = dict(
+                                                 x = raw_data['x'], y = raw_data['y'],
+                                                 yr = raw_data['resi'], yfit = raw_data['yfit'],
+                                                )).to_dict('list')
+
+        else:
+            raw.title.text = "Please enter signal to [substrate] transform!"
+            model.title.text = "(e.g. x/6.22/0.45/0.001 for sample data)"
+            raw_source.data = pd.DataFrame(data = dict(
+                                                 x = [], y = [],
+                                                 yr = [], yfit = [],
+                                                )).to_dict('list')
+            model_fit_source.data = pd.DataFrame(data = dict(
+                                x = [],
+                                y = []
+                                )).to_dict('list')
+            varea_source.data = pd.DataFrame(data = dict(
+                                x = [], 
+                                r1 = [],
+                                r2 = []
+                                )).to_dict('list')
+            mm_source.data = pd.DataFrame(data = dict(
+                                label = ['',''],
+                                Km = ['', ''],
+                                Vmax = ['', '']
+                                ), index=['value', 'error']).to_dict('list')
+            
     else:
 
         raw.title.text = "Initial Rate Fit"
@@ -343,9 +377,9 @@ def load_page(experiment_df, experiment_db):
 
     # text input boxes for progress curve xrange selection
     global start_time
-    start_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[0]), title="Start Time")
+    start_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[0]), title="Enter Start Time")
     global end_time
-    end_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[-1]), title='End Time')
+    end_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[-1]), title='Enter End Time')
     start_time.on_change('value', xbox_callback)
     end_time.on_change('value', xbox_callback)
 
@@ -361,7 +395,7 @@ def load_page(experiment_df, experiment_db):
     global range_slider
     range_slider = RangeSlider(start=xmin, end=xmax, value=(xmin, xmax),
                     step=experiment_df[experiment_df.columns[0]].values[1]-xmin,
-                    title='X-Axis Range', width=650)
+                    title='Fine Tune X-Axis Range', width=650)
     range_slider.on_change('value', slider_callback)
 
     # button to upload local data file
@@ -438,7 +472,7 @@ def load_page(experiment_df, experiment_db):
                         transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
     table = widgetbox(rate_table)
     main_row = row(column(upload_button, widgets),
-                    column(fit_button, row(raw, model), resi, range_slider, row(start_time, end_time)),
+                    column(fit_button, row(raw, model), resi, row(start_time, end_time), range_slider),
                     column(download_button, copy_button, table, mm_table, ic_table, threshold_slider))
 
     sizing_mode = 'scale_width'
