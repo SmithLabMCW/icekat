@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import row, column, widgetbox, layout
-from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Div, BasicTickFormatter, Whisker, Range1d
 from bokeh.models.widgets import RadioButtonGroup, Select, TextInput, Button, DataTable, TableColumn, RangeSlider, Slider, HTMLTemplateFormatter, CheckboxButtonGroup
 from bokeh.plotting import figure
 
@@ -118,7 +118,10 @@ def update():
     threshold = threshold_slider.value
     start = start_time.value
     end = end_time.value
-
+    warning.visible = False
+    warning_source.data = pd.DataFrame(data=dict(x=[], y=[], t=[]))
+    circles.visible = False
+    circles_source.data = pd.DataFrame(data=dict(x=[], y=[]))
     model.title.text = model_eq
 
     if 'x' in transform:
@@ -176,9 +179,11 @@ def update():
                                                 )).to_dict('list')
 
         else:
-            raw.title.text = "Please enter transform equation!"
-            resi.title.text = "Must convert signal to [substrate] in Schnell-Mendoza mode (e.g. via x/6.22/0.45/0.001 for sample data)"
-            model.title.text = ""
+            warning.visible = True
+            warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+            circles.visible = True
+            circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
+            raw.x_range = Range1d(-0.1, 2.5)
             raw_source.data = pd.DataFrame(data = dict(
                                                  x = [], y = [],
                                                  yr = [], yfit = [],
@@ -299,6 +304,16 @@ def load_page(experiment_df, experiment_db):
     raw.circle('x', 'y', size=2, source=raw_source, color='gray',
                 selection_color="black", alpha=0.6, nonselection_alpha=0.2, selection_alpha=0.6)
     raw.line('x', 'yfit', source=raw_source, color='red')
+    global warning_source
+    warning_source = ColumnDataSource(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+    global warning
+    warning = raw.text(x='x', y='y', text='t', text_font_size='12pt', angle=0, source=warning_source)
+    warning.visible = False
+    global circles_source
+    circles_source = ColumnDataSource(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
+    global circles
+    circles = raw.circle(x='x', y='y', alpha=0., source=circles_source)
+    circles.visible = False
     global resi
     resi = figure(title="Initial Rate Fit Residuals", x_axis_label="Time", y_axis_label="Residual",
                  plot_width=700, plot_height=200, tools='wheel_zoom,pan,reset')
