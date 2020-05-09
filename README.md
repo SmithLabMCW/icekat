@@ -38,6 +38,6 @@ research community, we have made ICEKAT freely available online at
 https://icekat.herokuapp.com/icekat.
 
 ## Tutorial
-![png](page_files/ICEKAT_Tutorial_Page_1.png)
-![png](page_files/ICEKAT_Tutorial_Page_1.png)
-![png](page_files/ICEKAT_Tutorial_Page_1.png)
+![png](page_files/Appendix B-1.png)
+![png](page_files/Appendix B-2.png)
+![png](page_files/Appendix B-3.png)
