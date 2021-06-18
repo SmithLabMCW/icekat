@@ -257,18 +257,20 @@ def update():
                                                         y = model_result['yfit']
                                                         )).to_dict('list')
 
-            if experiment_db['model'] == 'Michaelis-Menten':
+            if experiment_db['model'] == 'Michaelis-Menten' or experiment_db['model'] == 'kcat/Km':
                 mm_source.data = pd.DataFrame(data = dict(
                                                        label = ['Fit Value', 'Std. Error'],
                                                        Km = model_result['Km'],
-                                                       Vmax = model_result['Vmax']
+                                                       Vmax = model_result['Vmax'],
+                                                       ksp = model_result['ksp'],
+                                                       kcat = model_result['kcat']
                                                    ), index=['value', 'error']).to_dict('list')
                 ic_source.data = pd.DataFrame(data = dict(
                                                     label = [], Bottom = [], Top = [],
                                                     Slope = [], p50 = []
                                                 )).to_dict('list')
                 model.xaxis.axis_label = 'Concentration'
-
+            
             elif experiment_db['model'] == 'pEC50/pIC50':
                 ic_source.data = pd.DataFrame(data = dict(
                                                     label = ['Fit Value', 'Std. Error'],
@@ -277,11 +279,11 @@ def update():
                                                     Slope = model_result['Slope'],
                                                     p50 = model_result['p50']
                                                 ), index = ['value', 'error']).to_dict('list')
-                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [] )).to_dict('list')
+                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
                 model.xaxis.axis_label = 'Log10(Concentration)'
 
             else:
-                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [] )).to_dict('list')
+                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
                 ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [],
                                                     Slope = [], p50 =[]
                                                    )).to_dict('list')
@@ -353,7 +355,7 @@ def load_page(experiment_df, experiment_db):
     # dropdown menu for selecting titration experiment model
     global model_select
     model_select = Select(title='Choose Model', value='Michaelis-Menten',
-                          options=['Michaelis-Menten', 'pEC50/pIC50', 'High-Throughput Screen'], width=350)
+                          options=['Michaelis-Menten', 'kcat/Km', 'pEC50/pIC50', 'High-Throughput Screen'], width=350)
     model_select.on_change('value', widget_callback)
 
     # dropdown menu for selecting blank sample to subtract from remaining titration samples
@@ -448,7 +450,9 @@ def load_page(experiment_df, experiment_db):
     columns = [
         TableColumn(field='label', title=''),
         TableColumn(field='Vmax', title='Vmax'),
-        TableColumn(field='Km', title='Km')
+        TableColumn(field='Km', title='Km'),
+        TableColumn(field='ksp', title='kcat/Km'),
+        TableColumn(field='kcat', title='kcat')
     ]
     global mm_table
     mm_table = DataTable(source=mm_source, columns=columns, width=350, height=75,

@@ -28,6 +28,12 @@ def logWithZeros(x):
                 out.append(np.log10(xi))
     return np.array(out)
 
+def johnson(x, ksp, kcat):
+    '''
+    implementation of the modified form of the Michaelis-Menten equation presented in Johnson AJ, Beilstein J Org Chem 2019.
+    '''
+    return (ksp*x) / (1 + (ksp*x)/kcat)
+    
 def SM(x, km, vmax):
     '''
     implementation of the Schnell-Mendoza equation using the scipy lambertw function
@@ -317,6 +323,8 @@ class kinetic_model(object):
             result['ep'] = e
             result['cp'] = ['grey']*len(result['xp'])
             result['ct'] = ['white']*len(result['xt'])
+            result['ksp'] = tuple([np.nan, np.nan])
+            result['kcat'] = tuple([np.nan, np.nan])
             try:
                 xfit = np.linspace(np.min(x), np.max(x), 100)
                 result['xfit'] = xfit
@@ -333,6 +341,37 @@ class kinetic_model(object):
                 result['yfit'] = []
                 result['Km'] = tuple([np.nan, np.nan])
                 result['Vmax'] = tuple([np.nan, np.nan])
+        elif self.dict['model'] == 'kcat/Km':
+            include = np.where(x != 1e-23)[0]
+            x, y, e = x[include], y[include], e[include]
+            result['yp'] = y
+            result['xp'] = x
+            result['ep'] = e
+            result['cp'] = ['grey']*len(result['xp'])
+            result['ct'] = ['white']*len(result['xt'])
+            result['Vmax'] = tuple([np.nan, np.nan])
+            try:
+                xfit = np.linspace(np.min(x), np.max(x), 100)
+                result['xfit'] = xfit
+                popt_j, pcov_j = curve_fit(johnson, x, y, sigma=e, absolute_sigma=True, maxfev=100000, bounds=(0, [np.inf, np.inf]))
+                perr_j = np.sqrt(np.diag(pcov_j))
+                yj = johnson(xfit, *popt_j)
+                result['yfit'] = yj
+                result['ksp'] = tuple(['%.2E' % Decimal(str(popt_j[0])),
+                                        '%.2E' % Decimal(str(perr_j[0]))])
+                result['kcat'] = tuple(['%.2E' % Decimal(str(popt_j[1])),
+                                        '%.2E' % Decimal(str(perr_j[1]))])
+                ksp = ufloat(popt_j[0], perr_j[0])
+                kcat = ufloat(popt_j[1], perr_j[1])
+                Km = kcat/ksp
+                result['Km'] = tuple(['%.2E' % Decimal(str(Km.nominal_value)),
+                                            '%.2E' % Decimal(str(Km.std_dev))])
+            except:
+                result['xfit'] = []
+                result['yfit'] = []
+                result['Km'] = tuple([np.nan, np.nan])
+                result['ksp'] = tuple([np.nan, np.nan])
+                result['kcat'] = tuple([np.nan, np.nan])
         elif self.dict['model'] == 'pEC50/pIC50':
             include = np.where(x != 1e-23)[0]
             x, y, e = x[include], y[include], e[include]
