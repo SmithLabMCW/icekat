@@ -2,6 +2,6 @@ bokeh==1.4.0
 pandas
 xlrd==1.2.0
 scipy
-lmfit==0.9.12
+lmfit
 numpy
 uncertainties==3.0.3
