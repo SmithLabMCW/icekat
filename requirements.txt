@@ -1,8 +1,7 @@
 bokeh==1.4.0
-pandas==0.23.4
-xlrd==1.2.0
-scipy==1.4.1
-lmfit==0.9.12
-numpy==1.15.4
-uncertainties==3.0.3
-mportlib-metadata
+pandas
+xlrd
+scipy
+lmfit
+numpy
+uncertainties
