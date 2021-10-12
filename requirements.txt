@@ -1,3 +1,4 @@
+python==3.6.15
 bokeh==1.4.0
 pandas
 xlrd==1.2.0
