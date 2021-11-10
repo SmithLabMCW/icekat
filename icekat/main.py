@@ -104,190 +104,193 @@ def threshold_callback(attrname, old, new):
 
 def update():
 
-    # get selections
-    fit_routine = fit_button.active
-    scalex = len(scalex_box.active)
-    model_eq = model_select.value
-    subtract = subtract_select.value
-    sample = sample_select.value
-    transform = transform_input.value
-    offset = offset_input.value
-    top = top_fix.value
-    bottom = bottom_fix.value
-    slope = slope_fix.value
-    threshold = threshold_slider.value
-    start = start_time.value
-    end = end_time.value
-    warning.visible = False
-    warning_source.data = pd.DataFrame(data=dict(x=[], y=[], t=[]))
-    circles.visible = False
-    circles_source.data = pd.DataFrame(data=dict(x=[], y=[]))
-    model.title.text = model_eq
-
-    if 'x' in transform:
-        raw.yaxis.axis_label = 'Concentration'
-    else:
-        raw.yaxis.axis_label = 'Concentration'
-
-    # update database
-    experiment_db[sample+'_fit'] = fit_routine
-    experiment_db['model'] = model_eq
-    pdf = experiment_df[[experiment_df.columns[0], sample]]
-    experiment_db[sample] = ck.progress_curve(pdf, start, end)
-
-    if fit_routine == 3:
-
-        raw.title.text = "Schnell-Mendoza Fit"
-        resi.title.text = "Schnell-Mendoza Fit Residuals"
-        raw.title.text = "Schnell-Mendoza Fit"
-        resi.title.text = "Schnell-Mendoza Fit Residuals"
-        model_select.value = 'Michaelis-Menten'
-        scalex_box.active = []
-
-        model_data_source.data = pd.DataFrame(data = dict(
-                                xt = [], yt = [], et = [],
-                                n = [], ct = []
-                                )).to_dict('list')
-        model_plot_source.data = pd.DataFrame(data = dict(xp = [],
-                                yp = [], u = [], l = [], ep = [],
-                                cp = [])).to_dict('list')
-        ic_source.data = pd.DataFrame(data = dict(
-                                label = [], Bottom = [], Top = [],
-                                Slope = [], p50 = []
-                                )).to_dict('list')
+    try:
+        # get selections
+        fit_routine = fit_button.active
+        scalex = len(scalex_box.active)
+        model_eq = model_select.value
+        subtract = subtract_select.value
+        sample = sample_select.value
+        transform = transform_input.value
+        offset = offset_input.value
+        top = top_fix.value
+        bottom = bottom_fix.value
+        slope = slope_fix.value
+        threshold = threshold_slider.value
+        start = start_time.value
+        end = end_time.value
+        warning.visible = False
+        warning_source.data = pd.DataFrame(data=dict(x=[], y=[], t=[]))
+        circles.visible = False
+        circles_source.data = pd.DataFrame(data=dict(x=[], y=[]))
+        model.title.text = model_eq
 
         if 'x' in transform:
-
-            raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
-            model_fit_source.data = pd.DataFrame(data = dict(
-                                x = model_result['xfit'],
-                                y = model_result['yfit']
-                                )).to_dict('list')
-            varea_source.data = pd.DataFrame(data = dict(
-                                x = varea_data['x'],
-                                r1 = varea_data['r1'],
-                                r2 = varea_data['r2']
-                                )).to_dict('list')
-            mm_source.data = pd.DataFrame(data = dict(
-                                label = ['Fit Value', 'Std. Error'],
-                                Km = fit_data['Km'],
-                                Vmax = fit_data['Vmax']
-                                ), index=['value', 'error']).to_dict('list')
-            raw_source.data = pd.DataFrame(data = dict(
-                                                 x = raw_data['x'], y = raw_data['y'],
-                                                 yr = raw_data['resi'], yfit = raw_data['yfit'],
-                                                )).to_dict('list')
-
+            raw.yaxis.axis_label = 'Concentration'
         else:
-            warning.visible = True
-            warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
-            circles.visible = True
-            circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
-            raw.x_range = Range1d(-0.1, 2.5)
-            raw_source.data = pd.DataFrame(data = dict(
-                                                 x = [], y = [],
-                                                 yr = [], yfit = [],
-                                                )).to_dict('list')
-            model_fit_source.data = pd.DataFrame(data = dict(
-                                x = [],
-                                y = []
-                                )).to_dict('list')
-            varea_source.data = pd.DataFrame(data = dict(
-                                x = [],
-                                r1 = [],
-                                r2 = []
-                                )).to_dict('list')
-            mm_source.data = pd.DataFrame(data = dict(
-                                label = ['',''],
-                                Km = ['', ''],
-                                Vmax = ['', '']
-                                ), index=['value', 'error']).to_dict('list')
+            raw.yaxis.axis_label = 'Concentration'
 
-    else:
+        # update database
+        experiment_db[sample+'_fit'] = fit_routine
+        experiment_db['model'] = model_eq
+        pdf = experiment_df[[experiment_df.columns[0], sample]]
+        experiment_db[sample] = ck.progress_curve(pdf, start, end)
 
-        raw.title.text = "Initial Rate Fit"
-        resi.title.text = "Initial Rate Fit Residuals"
-        varea_source.data = pd.DataFrame(data = dict( x = [], r1 = [], r2 = [] )).to_dict('list')
-        raw.yaxis.axis_label = 'Signal'
+        if fit_routine == 3:
 
-        if fit_routine == 0:
-            progress_data = experiment_db[sample].spline()
-            experiment_db[sample].spline = progress_data
+            raw.title.text = "Schnell-Mendoza Fit"
+            resi.title.text = "Schnell-Mendoza Fit Residuals"
+            raw.title.text = "Schnell-Mendoza Fit"
+            resi.title.text = "Schnell-Mendoza Fit Residuals"
+            model_select.value = 'Michaelis-Menten'
+            scalex_box.active = []
 
-        elif fit_routine == 1:
-            progress_data = experiment_db[sample].linear()
-            experiment_db[sample].linear = progress_data
-
-        elif fit_routine == 2:
-            try:
-                offset = float(offset)
-            except:
-                    pass
-            progress_data = experiment_db[sample].logarithmic(offset)
-            experiment_db[sample].logarithmic = progress_data
-
-        raw_source.data = pd.DataFrame(data = dict(
-                                                x = progress_data['x'],
-                                                y = progress_data['y'],
-                                                yr = progress_data['resi'],
-                                                yfit = progress_data['yfit']
-                                            )).to_dict('list')
-
-        # model analysis
-        if len(list(experiment_df)) > 2:
-            model_dict = ck.kinetic_model(experiment_db)
-            model_result = model_dict.model(subtract, transform, threshold, bottom, top, slope, scalex, offset)
             model_data_source.data = pd.DataFrame(data = dict(
-                                                        xt = model_result['xt'],
-                                                        yt = model_result['yt'],
-                                                        et = model_result['et'],
-                                                        n = model_result['n'],
-                                                        ct = model_result['ct']
-                                                       )).to_dict('list')
-            model_plot_source.data = pd.DataFrame(data = dict(
-                                                        xp = model_result['xp'],
-                                                        yp = model_result['yp'],
-                                                        u = model_result['u'],
-                                                        l = model_result['l'],
-                                                        ep = model_result['ep'],
-                                                        cp = model_result['cp']
-                                                       )).to_dict('list')
-            model_fit_source.data = pd.DataFrame(data = dict(
-                                                        x = model_result['xfit'],
-                                                        y = model_result['yfit']
-                                                        )).to_dict('list')
+                                    xt = [], yt = [], et = [],
+                                    n = [], ct = []
+                                    )).to_dict('list')
+            model_plot_source.data = pd.DataFrame(data = dict(xp = [],
+                                    yp = [], u = [], l = [], ep = [],
+                                    cp = [])).to_dict('list')
+            ic_source.data = pd.DataFrame(data = dict(
+                                    label = [], Bottom = [], Top = [],
+                                    Slope = [], p50 = []
+                                    )).to_dict('list')
 
-            if experiment_db['model'] == 'Michaelis-Menten' or experiment_db['model'] == 'kcat/Km':
+            if 'x' in transform:
+
+                raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
+                model_fit_source.data = pd.DataFrame(data = dict(
+                                    x = model_result['xfit'],
+                                    y = model_result['yfit']
+                                    )).to_dict('list')
+                varea_source.data = pd.DataFrame(data = dict(
+                                    x = varea_data['x'],
+                                    r1 = varea_data['r1'],
+                                    r2 = varea_data['r2']
+                                    )).to_dict('list')
                 mm_source.data = pd.DataFrame(data = dict(
-                                                       label = ['Fit Value', 'Std. Error'],
-                                                       Km = model_result['Km'],
-                                                       Vmax = model_result['Vmax'],
-                                                       ksp = model_result['ksp'],
-                                                       kcat = model_result['kcat']
-                                                   ), index=['value', 'error']).to_dict('list')
-                ic_source.data = pd.DataFrame(data = dict(
-                                                    label = [], Bottom = [], Top = [],
-                                                    Slope = [], p50 = []
-                                                )).to_dict('list')
-                model.xaxis.axis_label = 'Concentration'
-            
-            elif experiment_db['model'] == 'pEC50/pIC50':
-                ic_source.data = pd.DataFrame(data = dict(
-                                                    label = ['Fit Value', 'Std. Error'],
-                                                    Bottom = model_result['Bottom'],
-                                                    Top = model_result['Top'],
-                                                    Slope = model_result['Slope'],
-                                                    p50 = model_result['p50']
-                                                ), index = ['value', 'error']).to_dict('list')
-                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
-                model.xaxis.axis_label = 'Log10(Concentration)'
+                                    label = ['Fit Value', 'Std. Error'],
+                                    Km = fit_data['Km'],
+                                    Vmax = fit_data['Vmax']
+                                    ), index=['value', 'error']).to_dict('list')
+                raw_source.data = pd.DataFrame(data = dict(
+                                                     x = raw_data['x'], y = raw_data['y'],
+                                                     yr = raw_data['resi'], yfit = raw_data['yfit'],
+                                                    )).to_dict('list')
 
             else:
-                mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
-                ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [],
-                                                    Slope = [], p50 =[]
-                                                   )).to_dict('list')
-                model.xaxis.axis_label = 'Sample #'
+                warning.visible = True
+                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+                circles.visible = True
+                circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
+                raw.x_range = Range1d(-0.1, 2.5)
+                raw_source.data = pd.DataFrame(data = dict(
+                                                     x = [], y = [],
+                                                     yr = [], yfit = [],
+                                                    )).to_dict('list')
+                model_fit_source.data = pd.DataFrame(data = dict(
+                                    x = [],
+                                    y = []
+                                    )).to_dict('list')
+                varea_source.data = pd.DataFrame(data = dict(
+                                    x = [],
+                                    r1 = [],
+                                    r2 = []
+                                    )).to_dict('list')
+                mm_source.data = pd.DataFrame(data = dict(
+                                    label = ['',''],
+                                    Km = ['', ''],
+                                    Vmax = ['', '']
+                                    ), index=['value', 'error']).to_dict('list')
+
+        else:
+
+            raw.title.text = "Initial Rate Fit"
+            resi.title.text = "Initial Rate Fit Residuals"
+            varea_source.data = pd.DataFrame(data = dict( x = [], r1 = [], r2 = [] )).to_dict('list')
+            raw.yaxis.axis_label = 'Signal'
+
+            if fit_routine == 0:
+                progress_data = experiment_db[sample].spline()
+                experiment_db[sample].spline = progress_data
+
+            elif fit_routine == 1:
+                progress_data = experiment_db[sample].linear()
+                experiment_db[sample].linear = progress_data
+
+            elif fit_routine == 2:
+                try:
+                    offset = float(offset)
+                except:
+                        pass
+                progress_data = experiment_db[sample].logarithmic(offset)
+                experiment_db[sample].logarithmic = progress_data
+
+            raw_source.data = pd.DataFrame(data = dict(
+                                                    x = progress_data['x'],
+                                                    y = progress_data['y'],
+                                                    yr = progress_data['resi'],
+                                                    yfit = progress_data['yfit']
+                                                )).to_dict('list')
+
+            # model analysis
+            if len(list(experiment_df)) > 2:
+                model_dict = ck.kinetic_model(experiment_db)
+                model_result = model_dict.model(subtract, transform, threshold, bottom, top, slope, scalex, offset)
+                model_data_source.data = pd.DataFrame(data = dict(
+                                                            xt = model_result['xt'],
+                                                            yt = model_result['yt'],
+                                                            et = model_result['et'],
+                                                            n = model_result['n'],
+                                                            ct = model_result['ct']
+                                                           )).to_dict('list')
+                model_plot_source.data = pd.DataFrame(data = dict(
+                                                            xp = model_result['xp'],
+                                                            yp = model_result['yp'],
+                                                            u = model_result['u'],
+                                                            l = model_result['l'],
+                                                            ep = model_result['ep'],
+                                                            cp = model_result['cp']
+                                                           )).to_dict('list')
+                model_fit_source.data = pd.DataFrame(data = dict(
+                                                            x = model_result['xfit'],
+                                                            y = model_result['yfit']
+                                                            )).to_dict('list')
+
+                if experiment_db['model'] == 'Michaelis-Menten' or experiment_db['model'] == 'kcat/Km':
+                    mm_source.data = pd.DataFrame(data = dict(
+                                                           label = ['Fit Value', 'Std. Error'],
+                                                           Km = model_result['Km'],
+                                                           Vmax = model_result['Vmax'],
+                                                           ksp = model_result['ksp'],
+                                                           kcat = model_result['kcat']
+                                                       ), index=['value', 'error']).to_dict('list')
+                    ic_source.data = pd.DataFrame(data = dict(
+                                                        label = [], Bottom = [], Top = [],
+                                                        Slope = [], p50 = []
+                                                    )).to_dict('list')
+                    model.xaxis.axis_label = 'Concentration'
+
+                elif experiment_db['model'] == 'pEC50/pIC50':
+                    ic_source.data = pd.DataFrame(data = dict(
+                                                        label = ['Fit Value', 'Std. Error'],
+                                                        Bottom = model_result['Bottom'],
+                                                        Top = model_result['Top'],
+                                                        Slope = model_result['Slope'],
+                                                        p50 = model_result['p50']
+                                                    ), index = ['value', 'error']).to_dict('list')
+                    mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
+                    model.xaxis.axis_label = 'Log10(Concentration)'
+
+                else:
+                    mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
+                    ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [],
+                                                        Slope = [], p50 =[]
+                                                       )).to_dict('list')
+                    model.xaxis.axis_label = 'Sample #'
+    except:
+        print('Update trial error.')
 
 def load_page(experiment_df, experiment_db):
 
