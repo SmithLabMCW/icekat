@@ -4,5 +4,5 @@ xlrd
 scipy
 importlib_metadata
 lmfit==0.9.12
-numpy==1.21.3
+numpy==1.21.1
 uncertainties
