@@ -514,6 +514,14 @@ def load_page(): #experiment_df, experiment_db):
         error_page(error, 'Error creating page due to:')
 
 def file_callback(attrname, old, new):
+        loading = Div(text=open(join(dirname(__file__), "loader.html")).read(), width=1400)
+        l = layout([loading], sizing_mode='scale_both')
+        curdoc().clear()
+        curdoc().add_root(l)
+        curdoc().title = "ICEKAT"
+        curdoc().add_next_tick_callback(file_callback2)
+
+def file_callback2():
     try:
         # decode data
         raw_contents = file_source.data['file_contents'][0]
@@ -538,14 +546,7 @@ def file_callback(attrname, old, new):
             df = experiment_df[[experiment_df.columns[0], s]]
             experiment_db[s] = ck.progress_curve(df, xmin, xmax)
             experiment_db[s+'_fit'] = 0
-
-
-        loading = Div(text=open(join(dirname(__file__), "loader.html")).read(), width=1400)
-        l = layout([loading], sizing_mode='scale_both')
-        curdoc().clear()
-        curdoc().add_root(l)
-        curdoc().title = "ICEKAT"
-        curdoc().add_next_tick_callback(load_page)
+        load_page()
     except Exception as e:
         error = str(e)
         error_page(error, 'Error loading data file due to:')
