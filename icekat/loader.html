@@ -1,0 +1,33 @@
+<html>
+<head>
+ <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        #spinner   {
+
+            animation: spin 1s linear infinite;
+            color:red;
+            margin-left: 45vw;
+            margin-top: 45vh;
+
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .inline{
+            display: flex;
+        }
+        .spinner i{
+            margin-top: 10px;
+            margin-left: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="inline">
+           <p class="spinner" id="spinner"><i class="fa fa-spinner fa-5x"></i></p>
+    </div>
+</html>
