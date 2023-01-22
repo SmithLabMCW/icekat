@@ -105,7 +105,7 @@ def threshold_callback(attrname, old, new):
 
 def update():
 
-    try:
+    #try:
         # get selections
         fit_routine = fit_button.active
         scalex = len(scalex_box.active)
@@ -289,12 +289,12 @@ def update():
                                                         Slope = [], p50 =[]
                                                        )).to_dict('list')
                     model.xaxis.axis_label = 'Sample #'
-    except Exception as e:
-        error = str(e)
-        error_page(error, 'Error updating plots due to:')
+    #except Exception as e:
+    #    error = str(e)
+#        error_page(error, 'Error updating plots due to:')
 
 def load_page(): #experiment_df, experiment_db):
-    try:
+    #try:
         ########## bokeh plots ##########
 
         # general plot tools
@@ -509,12 +509,12 @@ def load_page(): #experiment_df, experiment_db):
         curdoc().clear()
         curdoc().add_root(l)
         curdoc().title = "ICEKAT"
-    except Exception as e:
-        error = str(e)
-        error_page(error, 'Error creating page due to:')
+    #except Exception as e:
+    #    error = str(e)
+#        error_page(error, 'Error creating page due to:')
 
 def file_callback(attrname, old, new):
-    try:
+    #try:
         # decode data
         raw_contents = file_source.data['file_contents'][0]
         prefix, b64_contents = raw_contents.split(',', 1)
@@ -543,9 +543,9 @@ def file_callback(attrname, old, new):
         curdoc().add_root(l)
         curdoc().title = "ICEKAT"
         curdoc().add_next_tick_callback(load_page)
-    except Exception as e:
-        error = str(e)
-        error_page(error, 'Error loading data file due to:')
+    #except Exception as e:
+#        error = str(e)
+#        error_page(error, 'Error loading data file due to:')
 
 def error_page(error, f):
     function = Div(text=f, width=1400)
