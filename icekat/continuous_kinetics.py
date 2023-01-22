@@ -267,13 +267,12 @@ class kinetic_model(object):
 
         result = {}
         df = pd.DataFrame()
-        for s in self.dict:
-            print(s)
+        for ix, s in enumerate(self.dict):
             if type(self.dict[s]) == progress_curve:
                 if len(re.findall(r'-?\d+\.?\d*', str(s))) > 0:
                     x = np.float64(re.findall(r'-?\d+\.?\d*', str(s))[0])
                 else:
-                    x = 0.0
+                    x = ix
                 if self.dict[s+'_fit'] == 0:
                     try:
                         sdf = self.dict[s].spline()
@@ -294,7 +293,9 @@ class kinetic_model(object):
                     df.at[s, 'error'] = sdf['error']
                     df.at[s, 'x'] = x
                 except:
-                    pass
+                    df.at[s, 'rate'] = np.nan
+                    df.at[s, 'error'] = np.nan
+                    df.at[s, 'x'] = x
         df = df.sort_values(['x'])
         uRates = [ufloat(ur, ue) for ur, ue in zip(df['rate'], df['error'])]
         df['uRates'] = uRates

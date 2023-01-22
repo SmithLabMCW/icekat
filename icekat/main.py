@@ -525,6 +525,8 @@ def file_callback(attrname, old, new):
         global experiment_df
         experiment_df = pd.read_csv(file_io)
         experiment_df.columns = [str(i) for i in list(experiment_df)]
+        experiment_df = experiment_df.dropna(axis=1, how='all').dropna(axis=0)
+        experiment_df = experiment_df.drop_duplicates(experiment_df.columns[0])
 
         # update database
         global experiment_db
@@ -532,10 +534,11 @@ def file_callback(attrname, old, new):
         xmin = experiment_df[experiment_df.columns[0]].values[0]
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
         for s in experiment_df.columns[1:]:
-            if np.max(experiment_df[s]) > 0.:
-                df = experiment_df[[experiment_df.columns[0], s]].dropna(axis=0).groupby(experiment_df.columns[0]).mean()
-                experiment_db[s] = ck.progress_curve(df, xmin, xmax)
-                experiment_db[s+'_fit'] = 0
+            #if np.max(experiment_df[s]) > 0.:
+            df = experiment_df[[experiment_df.columns[0], s]]
+            experiment_db[s] = ck.progress_curve(df, xmin, xmax)
+            experiment_db[s+'_fit'] = 0
+
 
         loading = Div(text=open(join(dirname(__file__), "loader.html")).read(), width=1400)
         l = layout([loading], sizing_mode='scale_both')
