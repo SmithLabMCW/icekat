@@ -2,7 +2,7 @@ bokeh==2.3.3
 pandas==1.4.3
 xlrd==2.0.1
 scipy==1.6.1
-importlib_metadata==4.8.1
+importlib_metadata
 lmfit==0.9.12
 numpy==1.21.3
 uncertainties==3.1.5
