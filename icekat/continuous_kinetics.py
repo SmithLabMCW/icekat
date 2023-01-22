@@ -33,7 +33,7 @@ def johnson(x, ksp, kcat):
     implementation of the modified form of the Michaelis-Menten equation presented in Johnson AJ, Beilstein J Org Chem 2019.
     '''
     return (ksp*x) / (1 + (ksp*x)/kcat)
-    
+
 def SM(x, km, vmax):
     '''
     implementation of the Schnell-Mendoza equation using the scipy lambertw function
@@ -138,7 +138,7 @@ class sm_fit(object):
         ytmp = []
         so, s, t = [], [], []
         rix = (0, 0)
-        
+
         if subtract in list(self.data):
             concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", subtract)[0])
             df = self.data[subtract].data
@@ -154,24 +154,24 @@ class sm_fit(object):
             sub_line = lmodel.fit(xs, params, x=ts)
             m = sub_line.params['m'].value
             b = sub_line.params['b'].value
-        
+
         for e in self.data:
             if type(self.data[e]) == progress_curve:
                 concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", e)[0])
                 df = self.data[e].data
-                
+
                 if e == sample:
                     rix = (len(t) + 1, len(t) + len(df))
-        
-                x = df[df.columns[1]]        
+
+                x = df[df.columns[1]]
                 if 'x' in transform:
                     x = eval(transform)
-                
+
                 ytmpi = [0]*len(x)
                 if subtract in list(self.data):
                     ytmpi = [linear(xi, m, b) for xi in df[df.columns[0]]]
                     x = [xi - linear(xi, m, b) for xi in x]
-                
+
                 sx = np.array([(concentration - (max(x) - xi) - yti) for xi, yti in zip(x, ytmpi)])
                 tx = np.array(df[df.columns[0]])
                 sox = np.array([concentration]*len(df))
@@ -180,13 +180,13 @@ class sm_fit(object):
                     t.append(ti)
                     s.append(si)
                     ytmp.append(yti)
-        
+
         x = np.array([t, so])
         params = Parameters()
         params.add(name="km", value=1)
         params.add(name="vmax", value=1)
         smodel = Model(SM)
-        result = smodel.fit(s, params, x=x, 
+        result = smodel.fit(s, params, x=x,
                             nan_policy='propagate', method='least_squares')
         km_val = result.params['km'].value
         vmax_val = result.params['vmax'].value
@@ -197,20 +197,20 @@ class sm_fit(object):
             'Km' : ['%.2E' % Decimal(str(km_val)), '%.2E' % Decimal(str(km_err))],
             'Vmax' : ['%.2E' % Decimal(str(vmax_val)), '%.2E' % Decimal(str(vmax_err))]
         }, index=['value', 'error'])
-        
+
         raw_data = pd.DataFrame(data={
-            'x' : t[rix[0]:rix[1]], 
-            'y' : s[rix[0]:rix[1]], 
+            'x' : t[rix[0]:rix[1]],
+            'y' : s[rix[0]:rix[1]],
             'yfit' : result.best_fit[rix[0]:rix[1]].real,
             'resi' : s[rix[0]:rix[1]] - result.best_fit[rix[0]:rix[1]].real,
         })
-        
+
         xfit = np.linspace(min(so), max(so), 1000)
         model_result = pd.DataFrame(data={
-            'xfit' : xfit, 
+            'xfit' : xfit,
             'yfit' : [mmfit(xf, km_val, vmax_val) for xf in xfit]
         })
-        
+
         varea_data = pd.DataFrame(data={
             'x' : xfit,
             'r1' : [mmfit(xf, km_val + km_err, vmax_val - vmax_err) for xf in xfit],
@@ -270,7 +270,7 @@ class kinetic_model(object):
         for s in self.dict:
             if type(self.dict[s]) == progress_curve:
                 if len(re.findall(r'-?\d+\.?\d*', str(s))) > 0:
-                    x = np.float(re.findall(r'-?\d+\.?\d*', str(s))[0])
+                    x = float(re.findall(r'-?\d+\.?\d*', str(s))[0])
                 else:
                     x = 0.0
                 if self.dict[s+'_fit'] == 0:
