@@ -181,7 +181,7 @@ def update():
 
             else:
                 warning.visible = True
-                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
                 circles.visible = True
                 circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
                 raw.x_range = Range1d(-0.1, 2.5)
@@ -353,7 +353,7 @@ def load_page(): #experiment_df, experiment_db):
 
         # button for selecting progress curve fitting routine
         global scalex_box
-        scalex_box = CheckboxButtonGroup(labels=["transform x-axis to Log10 scale"], active=[])
+        scalex_box = CheckboxButtonGroup(labels=["Transform X-axis to Log10 Scale"], active=[])
         scalex_box.on_change('active', widget_callback)
 
         # dropdown menu for selecting titration experiment model
@@ -370,7 +370,7 @@ def load_page(): #experiment_df, experiment_db):
 
         # dropdown menu for selecting titration sample to plot in current view
         global sample_select
-        sample_select = Select(title='Y Axis Sample', value=list(experiment_df)[-1],
+        sample_select = Select(title='Y-Axis Sample', value=list(experiment_df)[-1],
                                options=list(experiment_df)[1:], width=350)
         sample_select.on_change('value', sample_callback)
 
@@ -384,17 +384,17 @@ def load_page(): #experiment_df, experiment_db):
         offset_input = TextInput(value='', title="Enter Time Between Mixing and First Read", width=350)
         offset_input.on_change('value', widget_callback)
 
-        # text input boxes for fixing EC/IC50 parameters
+        # text input boxes for fixing EC50/IC50 parameters
         global bottom_fix
-        bottom_fix = TextInput(value='', title="Fix pIC50/pEC50 Bottom")
+        bottom_fix = TextInput(value='', title="Fix pEC50/pIC50 Bottom")
         bottom_fix.on_change('value', widget_callback)
 
         global top_fix
-        top_fix = TextInput(value='', title="Fix pIC50/pEC50 Top")
+        top_fix = TextInput(value='', title="Fix pEC50/pIC50 Top")
         top_fix.on_change('value', widget_callback)
 
         global slope_fix
-        slope_fix = TextInput(value='', title="Fix pIC50/pEC50 Hill Slope")
+        slope_fix = TextInput(value='', title="Fix pEC50/pIC50 Hill Slope")
         slope_fix.on_change('value', widget_callback)
 
         # text input boxes for progress curve xrange selection
@@ -468,7 +468,7 @@ def load_page(): #experiment_df, experiment_db):
             TableColumn(field='Bottom', title='Bottom'),
             TableColumn(field='Top', title='Top'),
             TableColumn(field='Slope', title='Slope'),
-            TableColumn(field='p50', title='pEC/IC50')
+            TableColumn(field='p50', title='pEC50/IC50')
         ]
         global ic_table
         ic_table = DataTable(source=ic_source, columns=columns, width=350, height=75,
@@ -490,7 +490,7 @@ def load_page(): #experiment_df, experiment_db):
 
         desc = Div(text=open(join(dirname(__file__), "description.html")).read(), width=1400)
 
-        advanced = Div(text="""<strong>Advanced Settings for \npEC/IC50 Analysis</strong>""")
+        advanced = Div(text="""<strong>Advanced Settings for \npEC50/IC50 Analysis</strong>""")
 
         widgets = column(model_select, sample_select, subtract_select,
                             transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
