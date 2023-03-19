@@ -42,11 +42,11 @@ def slider_callback(attrname, old, new):
     step = float(range_slider.step)
     end = float(range_slider.end)
 
-    if start >= stop -  5*step and stop <= end - 5*step:
-        range_slider.value = (start, start + 5*step)
+    if start >= stop -  4*step and stop <= end - 4*step:
+        range_slider.value = (start, start + 4*step)
 
-    elif start >= stop - 5*step and stop > end - 5*step:
-        range_slider.value = (stop - 5*step, stop)
+    elif start >= stop - 4*step and stop >= end - 4*step:
+        range_slider.value = (stop - 4*step, stop)
 
     if start_e != start or stop_e != stop:
         start_time.value = str(start)
