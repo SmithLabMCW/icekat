@@ -353,7 +353,7 @@ def load_page(): #experiment_df, experiment_db):
 
         # button for selecting progress curve fitting routine
         global scalex_box
-        scalex_box = CheckboxButtonGroup(labels=["Transform X-axis to Log10 Scale"], active=[])
+        scalex_box = CheckboxButtonGroup(labels=["Transform X-Axis to Log10 Scale"], active=[])
         scalex_box.on_change('active', widget_callback)
 
         # dropdown menu for selecting titration experiment model
