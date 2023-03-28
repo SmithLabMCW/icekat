@@ -490,7 +490,7 @@ def load_page(): #experiment_df, experiment_db):
 
         desc = Div(text=open(join(dirname(__file__), "description.html")).read(), width=1400)
 
-        advanced = Div(text="""<strong>Advanced Settings for \npEC50/IC50 Analysis</strong>""")
+        advanced = Div(text="""<strong>Advanced Settings for \npEC50/pIC50 Analysis</strong>""")
 
         widgets = column(model_select, sample_select, subtract_select,
                             transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
