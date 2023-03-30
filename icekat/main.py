@@ -181,7 +181,7 @@ def update():
 
             else:
                 warning.visible = True
-                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted by inputting -x\nin the numerator of the transform equation when analyzing experiments that measure increasing product concentration over time)']))
                 circles.visible = True
                 circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
                 raw.x_range = Range1d(-0.1, 2.5)
@@ -468,7 +468,7 @@ def load_page(): #experiment_df, experiment_db):
             TableColumn(field='Bottom', title='Bottom'),
             TableColumn(field='Top', title='Top'),
             TableColumn(field='Slope', title='Slope'),
-            TableColumn(field='p50', title='pEC50/IC50')
+            TableColumn(field='p50', title='pEC50/pIC50')
         ]
         global ic_table
         ic_table = DataTable(source=ic_source, columns=columns, width=350, height=75,
