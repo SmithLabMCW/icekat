@@ -181,7 +181,7 @@ def update():
 
             else:
                 warning.visible = True
-                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted by inputting -x\nin the numerator of the transform equation when analyzing experiments that measure increasing product concentration over time)']))
+                warning_source.data = pd.DataFrame(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted by inputting -x in the \nnumerator of the transform equation when analyzing experiments that measure increasing product concentration over time)']))
                 circles.visible = True
                 circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
                 raw.x_range = Range1d(-0.1, 2.5)
