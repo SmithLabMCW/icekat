@@ -531,11 +531,16 @@ def file_callback2():
 
         # update dataframe
         global experiment_df
-        experiment_df = pd.read_csv(file_io)
+        fname = file_source.data['file_name'][0]
+        if fname.split('.')[-1] == 'csv':
+            experiment_df = pd.read_csv(file_io).apply(pd.to_numeric, errors='coerce')
+        else:
+            experiment_df = pd.read_table(file_io, delim_whitespace=True).replace(',', '.', regex=True).apply(pd.to_numeric, errors='coerce')
+            experiment_df.columns = experiment_df.columns.str.replace(',', '.')
         experiment_df.columns = [str(i) for i in list(experiment_df)]
         experiment_df = experiment_df.dropna(axis=1, how='all').dropna(axis=0)
         experiment_df = experiment_df.drop_duplicates(experiment_df.columns[0])
-
+        
         # update database
         global experiment_db
         experiment_db = dict(model = 'Michaelis-Menten')

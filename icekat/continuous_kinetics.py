@@ -53,7 +53,7 @@ def logarithmic(x, yo, b, to):
     '''
     logarithmic equation from Lu & Fei et. al, 2003
     '''
-    return yo + b*np.log(1 + x*to)
+    return yo + b*np.log(0.0000001 + x*to)
 
 def mmfit(x, km, vmax):
     '''
