@@ -11,7 +11,7 @@ from uncertainties import ufloat
 
 def subsetDf(df, start, end):
 
-    result = df[(df[df.columns[0]] >= float(start)) & (df[df.columns[0]] <= float(end))].dropna(axis=0)
+    result = df[(df[df.columns[0]] >= np.float64(start)) & (df[df.columns[0]] <= np.float64(end))].dropna(axis=0)
 
     return result
 
