@@ -140,7 +140,7 @@ class sm_fit(object):
         rix = (0, 0)
 
         if subtract in list(self.data):
-            concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", subtract)[0])
+            concentration = np.float64(re.findall(r"[-+]?\d*\.\d+|\d+", subtract)[0])
             df = self.data[subtract].data
             ts = df[df.columns[0]]
             xs = df[df.columns[1]]
@@ -157,7 +157,7 @@ class sm_fit(object):
 
         for e in self.data:
             if type(self.data[e]) == progress_curve:
-                concentration = float(re.findall(r"[-+]?\d*\.\d+|\d+", e)[0])
+                concentration = np.float64(re.findall(r"[-+]?\d*\.\d+|\d+", e)[0])
                 df = self.data[e].data
 
                 if e == sample:
