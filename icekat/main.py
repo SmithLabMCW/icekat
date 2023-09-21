@@ -12,6 +12,8 @@ from bokeh.models.widgets import RadioButtonGroup, Select, TextInput, Button, Da
 from bokeh.plotting import figure
 
 ########## bokeh methods ##########
+
+
 def widget_callback(attrname, old, new):
 
     start = float(start_time.value)
@@ -19,6 +21,7 @@ def widget_callback(attrname, old, new):
     range_slider.value = (start, stop)
 
     update()
+
 
 def sample_callback(attrname, old, new):
 
@@ -33,6 +36,7 @@ def sample_callback(attrname, old, new):
 
     update()
 
+
 def slider_callback(attrname, old, new):
 
     start = float(range_slider.value[0])
@@ -42,7 +46,7 @@ def slider_callback(attrname, old, new):
     step = float(range_slider.step)
     end = float(range_slider.end)
 
-    if start >= stop -  4*step and stop <= end - 4*step:
+    if start >= stop - 4*step and stop <= end - 4*step:
         range_slider.value = (start, start + 4*step)
 
     elif start >= stop - 4*step and stop >= end - 4*step:
@@ -53,6 +57,7 @@ def slider_callback(attrname, old, new):
         end_time.value = str(stop)
 
     update()
+
 
 def xbox_callback(attrname, old, new):
 
@@ -69,6 +74,7 @@ def xbox_callback(attrname, old, new):
             range_slider.value = (start_e, stop_e)
 
     update()
+
 
 def threshold_callback(attrname, old, new):
 
@@ -103,197 +109,201 @@ def threshold_callback(attrname, old, new):
         model_plot_source.data['cp'] = color
         model_data_source.data['ct'] = colort
 
+
 def update():
 
-#    try:
-        # get selections
-        fit_routine = fit_button.active
-        scalex = len(scalex_box.active)
-        model_eq = model_select.value
-        subtract = subtract_select.value
-        sample = sample_select.value
-        transform = transform_input.value
-        offset = offset_input.value
-        top = top_fix.value
-        bottom = bottom_fix.value
-        slope = slope_fix.value
-        threshold = threshold_slider.value
-        start = start_time.value
-        end = end_time.value
-        warning.visible = False
-        warning_source.data = pd.DataFrame(data=dict(x=[], y=[], t=[]))
-        circles.visible = False
-        circles_source.data = pd.DataFrame(data=dict(x=[], y=[]))
-        model.title.text = model_eq
+    #    try:
+    # get selections
+    fit_routine = fit_button.active
+    scalex = len(scalex_box.active)
+    model_eq = model_select.value
+    subtract = subtract_select.value
+    sample = sample_select.value
+    transform = transform_input.value
+    offset = offset_input.value
+    top = top_fix.value
+    bottom = bottom_fix.value
+    slope = slope_fix.value
+    threshold = threshold_slider.value
+    start = start_time.value
+    end = end_time.value
+    warning.visible = False
+    warning_source.data = pd.DataFrame(data=dict(x=[], y=[], t=[]))
+    circles.visible = False
+    circles_source.data = pd.DataFrame(data=dict(x=[], y=[]))
+    model.title.text = model_eq
+    if 'x' in transform:
+        raw.yaxis.axis_label = 'Concentration'
+    else:
+        raw.yaxis.axis_label = 'Concentration'
+
+    # update database
+    experiment_db[sample+'_fit'] = fit_routine
+    experiment_db['model'] = model_eq
+    pdf = experiment_df[[experiment_df.columns[0], sample]]
+    experiment_db[sample] = ck.progress_curve(pdf, start, end)
+    if fit_routine == 3:
+
+        raw.title.text = "Schnell-Mendoza Fit"
+        resi.title.text = "Schnell-Mendoza Fit Residuals"
+        raw.title.text = "Schnell-Mendoza Fit"
+        resi.title.text = "Schnell-Mendoza Fit Residuals"
+        model_select.value = 'Michaelis-Menten'
+        scalex_box.active = []
+
+        model_data_source.data = pd.DataFrame(data=dict(
+            xt=[], yt=[], et=[],
+            n=[], ct=[]
+        )).to_dict('list')
+        model_plot_source.data = pd.DataFrame(data=dict(xp=[],
+                                                        yp=[], u=[], l=[], ep=[],
+                                                        cp=[])).to_dict('list')
+        ic_source.data = pd.DataFrame(data=dict(
+            label=[], Bottom=[], Top=[],
+            Slope=[], p50=[]
+        )).to_dict('list')
 
         if 'x' in transform:
-            raw.yaxis.axis_label = 'Concentration'
+
+            raw_data, model_result, fit_data, varea_data = ck.sm_fit(
+                experiment_db).fit(sample, transform, subtract)
+            model_fit_source.data = pd.DataFrame(data=dict(
+                x=model_result['xfit'],
+                y=model_result['yfit']
+            )).to_dict('list')
+            varea_source.data = pd.DataFrame(data=dict(
+                x=varea_data['x'],
+                r1=varea_data['r1'],
+                r2=varea_data['r2']
+            )).to_dict('list')
+            mm_source.data = pd.DataFrame(data=dict(
+                label=['Fit Value', 'Std. Error'],
+                Km=fit_data['Km'],
+                Vmax=fit_data['Vmax']
+            ), index=['value', 'error']).to_dict('list')
+            raw_source.data = pd.DataFrame(data=dict(
+                x=raw_data['x'], y=raw_data['y'],
+                yr=raw_data['resi'], yfit=raw_data['yfit'],
+            )).to_dict('list')
+
         else:
-            raw.yaxis.axis_label = 'Concentration'
+            warning.visible = True
+            warning_source.data = pd.DataFrame(data=dict(
+                x=[-.1], y=[-.1], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g.\nvia x/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted by inputting -x in the \nnumerator of the transform\nequation when analyzing\nexperiments that measure\nincreasing product concentration\nover time)']))
+            circles.visible = True
+            circles_source.data = pd.DataFrame(
+                data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
+            raw.x_range = Range1d(-0.1, 2.5)
+            raw_source.data = pd.DataFrame(data=dict(
+                x=[], y=[],
+                yr=[], yfit=[],
+            )).to_dict('list')
+            model_fit_source.data = pd.DataFrame(data=dict(
+                x=[],
+                y=[]
+            )).to_dict('list')
+            varea_source.data = pd.DataFrame(data=dict(
+                x=[],
+                r1=[],
+                r2=[]
+            )).to_dict('list')
+            mm_source.data = pd.DataFrame(data=dict(
+                label=['', ''],
+                Km=['', ''],
+                Vmax=['', '']
+            ), index=['value', 'error']).to_dict('list')
 
-        # update database
-        experiment_db[sample+'_fit'] = fit_routine
-        experiment_db['model'] = model_eq
-        pdf = experiment_df[[experiment_df.columns[0], sample]]
-        experiment_db[sample] = ck.progress_curve(pdf, start, end)
-        if fit_routine == 3:
+    else:
+        raw.title.text = "Initial Rate Fit"
+        resi.title.text = "Initial Rate Fit Residuals"
+        varea_source.data = pd.DataFrame(
+            data=dict(x=[], r1=[], r2=[])).to_dict('list')
+        raw.yaxis.axis_label = 'Signal'
 
-            raw.title.text = "Schnell-Mendoza Fit"
-            resi.title.text = "Schnell-Mendoza Fit Residuals"
-            raw.title.text = "Schnell-Mendoza Fit"
-            resi.title.text = "Schnell-Mendoza Fit Residuals"
-            model_select.value = 'Michaelis-Menten'
-            scalex_box.active = []
+        if fit_routine == 0:
+            progress_data = experiment_db[sample].spline()
+            experiment_db[sample].spline = progress_data
 
-            model_data_source.data = pd.DataFrame(data = dict(
-                                    xt = [], yt = [], et = [],
-                                    n = [], ct = []
-                                    )).to_dict('list')
-            model_plot_source.data = pd.DataFrame(data = dict(xp = [],
-                                    yp = [], u = [], l = [], ep = [],
-                                    cp = [])).to_dict('list')
-            ic_source.data = pd.DataFrame(data = dict(
-                                    label = [], Bottom = [], Top = [],
-                                    Slope = [], p50 = []
-                                    )).to_dict('list')
+        elif fit_routine == 1:
+            progress_data = experiment_db[sample].linear()
+            experiment_db[sample].linear = progress_data
 
-            if 'x' in transform:
+        elif fit_routine == 2:
+            try:
+                offset = float(offset)
+            except:
+                pass
+            progress_data = experiment_db[sample].logarithmic(offset)
+            experiment_db[sample].logarithmic = progress_data
 
-                raw_data, model_result, fit_data, varea_data = ck.sm_fit(experiment_db).fit(sample, transform, subtract)
-                model_fit_source.data = pd.DataFrame(data = dict(
-                                    x = model_result['xfit'],
-                                    y = model_result['yfit']
-                                    )).to_dict('list')
-                varea_source.data = pd.DataFrame(data = dict(
-                                    x = varea_data['x'],
-                                    r1 = varea_data['r1'],
-                                    r2 = varea_data['r2']
-                                    )).to_dict('list')
-                mm_source.data = pd.DataFrame(data = dict(
-                                    label = ['Fit Value', 'Std. Error'],
-                                    Km = fit_data['Km'],
-                                    Vmax = fit_data['Vmax']
-                                    ), index=['value', 'error']).to_dict('list')
-                raw_source.data = pd.DataFrame(data = dict(
-                                                     x = raw_data['x'], y = raw_data['y'],
-                                                     yr = raw_data['resi'], yfit = raw_data['yfit'],
-                                                    )).to_dict('list')
+        raw_source.data = pd.DataFrame(data=dict(
+            x=progress_data['x'],
+            y=progress_data['y'],
+            yr=progress_data['resi'],
+            yfit=progress_data['yfit']
+        )).to_dict('list')
+        # model analysis
+        if len(list(experiment_df)) > 2:
+            model_dict = ck.kinetic_model(experiment_db)
+            model_result = model_dict.model(
+                subtract, transform, threshold, bottom, top, slope, scalex, offset)
+            model_data_source.data = pd.DataFrame(data=dict(
+                xt=model_result['xt'],
+                yt=model_result['yt'],
+                et=model_result['et'],
+                n=model_result['n'],
+                ct=model_result['ct']
+            )).to_dict('list')
+            model_plot_source.data = pd.DataFrame(data=dict(
+                xp=model_result['xp'],
+                yp=model_result['yp'],
+                u=model_result['u'],
+                l=model_result['l'],
+                ep=model_result['ep'],
+                cp=model_result['cp']
+            )).to_dict('list')
+            model_fit_source.data = pd.DataFrame(data=dict(
+                x=model_result['xfit'],
+                y=model_result['yfit']
+            )).to_dict('list')
+            if experiment_db['model'] == 'Michaelis-Menten' or experiment_db['model'] == 'kcat/Km':
+                mm_source.data = pd.DataFrame(data=dict(
+                    label=['Fit Value', 'Std. Error'],
+                    Km=model_result['Km'],
+                    Vmax=model_result['Vmax'],
+                    ksp=model_result['ksp'],
+                    kcat=model_result['kcat']
+                ), index=['value', 'error']).to_dict('list')
+                ic_source.data = pd.DataFrame(data=dict(
+                    label=[], Bottom=[], Top=[],
+                    Slope=[], p50=[]
+                )).to_dict('list')
+                model.xaxis.axis_label = 'Concentration'
+            elif experiment_db['model'] == 'pEC50/pIC50':
+                ic_source.data = pd.DataFrame(data=dict(
+                    label=['Fit Value', 'Std. Error'],
+                    Bottom=model_result['Bottom'],
+                    Top=model_result['Top'],
+                    Slope=model_result['Slope'],
+                    p50=model_result['p50']
+                ), index=['value', 'error']).to_dict('list')
+                mm_source.data = pd.DataFrame(
+                    data=dict(label=[], Km=[], Vmax=[], ksp=[], kcat=[])).to_dict('list')
+                model.xaxis.axis_label = 'Log10(Concentration)'
 
             else:
-                warning.visible = True
-                warning_source.data = pd.DataFrame(data=dict(x=[-.1], y=[-.1], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g.\nvia x/(ε *ℓ * [E]) for sample data). \nNote: this transform may need \nto be inverted by inputting -x in the \nnumerator of the transform\nequation when analyzing\nexperiments that measure\nincreasing product concentration\nover time)']))
-                circles.visible = True
-                circles_source.data = pd.DataFrame(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
-                raw.x_range = Range1d(-0.1, 2.5)
-                raw_source.data = pd.DataFrame(data = dict(
-                                                     x = [], y = [],
-                                                     yr = [], yfit = [],
-                                                    )).to_dict('list')
-                model_fit_source.data = pd.DataFrame(data = dict(
-                                    x = [],
-                                    y = []
-                                    )).to_dict('list')
-                varea_source.data = pd.DataFrame(data = dict(
-                                    x = [],
-                                    r1 = [],
-                                    r2 = []
-                                    )).to_dict('list')
-                mm_source.data = pd.DataFrame(data = dict(
-                                    label = ['',''],
-                                    Km = ['', ''],
-                                    Vmax = ['', '']
-                                    ), index=['value', 'error']).to_dict('list')
-
-        else:
-
-            raw.title.text = "Initial Rate Fit"
-            resi.title.text = "Initial Rate Fit Residuals"
-            varea_source.data = pd.DataFrame(data = dict( x = [], r1 = [], r2 = [] )).to_dict('list')
-            raw.yaxis.axis_label = 'Signal'
-
-            if fit_routine == 0:
-                progress_data = experiment_db[sample].spline()
-                experiment_db[sample].spline = progress_data
-
-            elif fit_routine == 1:
-                progress_data = experiment_db[sample].linear()
-                experiment_db[sample].linear = progress_data
-
-            elif fit_routine == 2:
-                try:
-                    offset = float(offset)
-                except:
-                        pass
-                progress_data = experiment_db[sample].logarithmic(offset)
-                experiment_db[sample].logarithmic = progress_data
-
-            raw_source.data = pd.DataFrame(data = dict(
-                                                    x = progress_data['x'],
-                                                    y = progress_data['y'],
-                                                    yr = progress_data['resi'],
-                                                    yfit = progress_data['yfit']
-                                                )).to_dict('list')
-
-            # model analysis
-            if len(list(experiment_df)) > 2:
-                model_dict = ck.kinetic_model(experiment_db)
-                model_result = model_dict.model(subtract, transform, threshold, bottom, top, slope, scalex, offset)
-                model_data_source.data = pd.DataFrame(data = dict(
-                                                            xt = model_result['xt'],
-                                                            yt = model_result['yt'],
-                                                            et = model_result['et'],
-                                                            n = model_result['n'],
-                                                            ct = model_result['ct']
-                                                           )).to_dict('list')
-                model_plot_source.data = pd.DataFrame(data = dict(
-                                                            xp = model_result['xp'],
-                                                            yp = model_result['yp'],
-                                                            u = model_result['u'],
-                                                            l = model_result['l'],
-                                                            ep = model_result['ep'],
-                                                            cp = model_result['cp']
-                                                           )).to_dict('list')
-                model_fit_source.data = pd.DataFrame(data = dict(
-                                                            x = model_result['xfit'],
-                                                            y = model_result['yfit']
-                                                            )).to_dict('list')
-
-                if experiment_db['model'] == 'Michaelis-Menten' or experiment_db['model'] == 'kcat/Km':
-                    mm_source.data = pd.DataFrame(data = dict(
-                                                           label = ['Fit Value', 'Std. Error'],
-                                                           Km = model_result['Km'],
-                                                           Vmax = model_result['Vmax'],
-                                                           ksp = model_result['ksp'],
-                                                           kcat = model_result['kcat']
-                                                       ), index=['value', 'error']).to_dict('list')
-                    ic_source.data = pd.DataFrame(data = dict(
-                                                        label = [], Bottom = [], Top = [],
-                                                        Slope = [], p50 = []
-                                                    )).to_dict('list')
-                    model.xaxis.axis_label = 'Concentration'
-
-                elif experiment_db['model'] == 'pEC50/pIC50':
-                    ic_source.data = pd.DataFrame(data = dict(
-                                                        label = ['Fit Value', 'Std. Error'],
-                                                        Bottom = model_result['Bottom'],
-                                                        Top = model_result['Top'],
-                                                        Slope = model_result['Slope'],
-                                                        p50 = model_result['p50']
-                                                    ), index = ['value', 'error']).to_dict('list')
-                    mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
-                    model.xaxis.axis_label = 'Log10(Concentration)'
-
-                else:
-                    mm_source.data = pd.DataFrame(data = dict( label = [], Km = [], Vmax = [], ksp = [], kcat = [] )).to_dict('list')
-                    ic_source.data = pd.DataFrame(data = dict( label = [], Bottom = [], Top = [],
-                                                        Slope = [], p50 =[]
-                                                       )).to_dict('list')
-                    model.xaxis.axis_label = 'Sample #'
+                mm_source.data = pd.DataFrame(
+                    data=dict(label=[], Km=[], Vmax=[], ksp=[], kcat=[])).to_dict('list')
+                ic_source.data = pd.DataFrame(data=dict(label=[], Bottom=[], Top=[],
+                                                        Slope=[], p50=[]
+                                                        )).to_dict('list')
+                model.xaxis.axis_label = 'Sample #'
 #    except Exception as e:
 #        error = str(e)
 #        error_page(error, 'Error updating plots due to:')
 
-def load_page(): #experiment_df, experiment_db):
+
+def load_page():  # experiment_df, experiment_db):
     try:
         ########## bokeh plots ##########
 
@@ -308,52 +318,64 @@ def load_page(): #experiment_df, experiment_db):
         raw = figure(title="Initial Rate Fit", x_axis_label="Time", y_axis_label="Signal",
                      width=350, height=300, tools=plot_tools)
         raw.circle('x', 'y', size=2, source=raw_source, color='gray',
-                    selection_color="black", alpha=0.6, nonselection_alpha=0.2, selection_alpha=0.6)
+                   selection_color="black", alpha=0.6, nonselection_alpha=0.2, selection_alpha=0.6)
         raw.line('x', 'yfit', source=raw_source, color='red')
         global warning_source
-        warning_source = ColumnDataSource(data=dict(x=[0], y=[0], t=['Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
+        warning_source = ColumnDataSource(data=dict(x=[0], y=[0], t=[
+                                          'Please enter transform equation! \nMust convert signal to [substrate] \nin Schnell-Mendoza mode (e.g. via \nx/6.22/0.45/0.001 for sample data). \nNote: this transform may need \nto be inverted through multiplying \nby -1 when analyzing experiments \nthat measure increasing product \nconcentration over time)']))
         global warning
-        warning = raw.text(x='x', y='y', text='t', text_font_size='12pt', angle=0, source=warning_source)
+        warning = raw.text(x='x', y='y', text='t',
+                           text_font_size='12pt', angle=0, source=warning_source)
         warning.visible = False
         global circles_source
-        circles_source = ColumnDataSource(data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
+        circles_source = ColumnDataSource(
+            data=dict(x=[-.05, -.05, 1.6, 1.6], y=[0, 0.6, 0, 0.6]))
         global circles
         circles = raw.circle(x='x', y='y', alpha=0., source=circles_source)
         circles.visible = False
         global resi
         resi = figure(title="Initial Rate Fit Residuals", x_axis_label="Time", y_axis_label="Residual",
-                     width=700, height=200, tools='wheel_zoom,pan,reset')
-        resi.yaxis.formatter = BasicTickFormatter(precision=2, use_scientific=True)
-        resi.circle('x', 'yr', size=5, source=raw_source, color='grey', alpha=0.6)
+                      width=700, height=200, tools='wheel_zoom,pan,reset')
+        resi.yaxis.formatter = BasicTickFormatter(
+            precision=2, use_scientific=True)
+        resi.circle('x', 'yr', size=5, source=raw_source,
+                    color='grey', alpha=0.6)
 
         # model plot for titration experiments
         global model_data_source
-        model_data_source = ColumnDataSource(data=dict(xt=[], yt=[], n=[], ct=[], et=[]))
+        model_data_source = ColumnDataSource(
+            data=dict(xt=[], yt=[], n=[], ct=[], et=[]))
         global model_plot_source
-        model_plot_source = ColumnDataSource(data=dict(xp=[], yp=[], l=[], u=[], cp=[], ep=[]))
+        model_plot_source = ColumnDataSource(
+            data=dict(xp=[], yp=[], l=[], u=[], cp=[], ep=[]))
         global model_fit_source
         model_fit_source = ColumnDataSource(data=dict(x=[], y=[]))
         global varea_source
         varea_source = ColumnDataSource(data=dict(x=[], r1=[], r2=[]))
         global model
         model = figure(title='Model Fit', x_axis_label='Concentration', y_axis_label='Rate', width=350,
-                      height=300, tools=plot_tools)
-        model.circle('xp', 'yp', size=8, source=model_plot_source, color='cp', alpha=0.6)
-        model.add_layout(Whisker(source=model_plot_source, base='xp', upper='u', lower='l'))
-        model.line('x', 'y', source=model_fit_source, line_width=3, color='black', alpha=0.8)
-        model.varea('x', 'r1', 'r2', source=varea_source, color='grey', alpha=0.3)
+                       height=300, tools=plot_tools)
+        model.circle('xp', 'yp', size=8, source=model_plot_source,
+                     color='cp', alpha=0.6)
+        model.add_layout(Whisker(source=model_plot_source,
+                         base='xp', upper='u', lower='l'))
+        model.line('x', 'y', source=model_fit_source,
+                   line_width=3, color='black', alpha=0.8)
+        model.varea('x', 'r1', 'r2', source=varea_source,
+                    color='grey', alpha=0.3)
 
         ########## bokeh widgets ##########
 
         # button for selecting progress curve fitting routine
         global fit_button
         fit_button = RadioButtonGroup(labels=['Maximize Slope Magnitude', 'Linear Fit',
-                                        'Logarithmic Fit', 'Schnell-Mendoza'], active=0, width=375)
+                                              'Logarithmic Fit', 'Schnell-Mendoza'], active=0, width=375)
         fit_button.on_change('active', widget_callback)
 
         # button for selecting progress curve fitting routine
         global scalex_box
-        scalex_box = CheckboxButtonGroup(labels=["Transform X-Axis to Log10 Scale"], active=[])
+        scalex_box = CheckboxButtonGroup(
+            labels=["Transform X-Axis to Log10 Scale"], active=[])
         scalex_box.on_change('active', widget_callback)
 
         # dropdown menu for selecting titration experiment model
@@ -365,7 +387,7 @@ def load_page(): #experiment_df, experiment_db):
         # dropdown menu for selecting blank sample to subtract from remaining titration samples
         global subtract_select
         subtract_select = Select(title='Select Blank Sample for Subtraction', value='',
-                                     options=list(experiment_df)[1:]+[''], width=350)
+                                 options=list(experiment_df)[1:]+[''], width=350)
         subtract_select.on_change('value', widget_callback)
 
         # dropdown menu for selecting titration sample to plot in current view
@@ -376,12 +398,14 @@ def load_page(): #experiment_df, experiment_db):
 
         # text input box for transforming slopes to rates
         global transform_input
-        transform_input = TextInput(value='', title="Enter Transform Equation", width=350)
+        transform_input = TextInput(
+            value='', title="Enter Transform Equation", width=350)
         transform_input.on_change('value', widget_callback)
 
         # text input box for setting delay time in logarithmic progress curve fitting
         global offset_input
-        offset_input = TextInput(value='', title="Enter Time Between Mixing and First Read", width=350)
+        offset_input = TextInput(
+            value='', title="Enter Time Between Mixing and First Read", width=350)
         offset_input.on_change('value', widget_callback)
 
         # text input boxes for fixing EC50/IC50 parameters
@@ -399,16 +423,18 @@ def load_page(): #experiment_df, experiment_db):
 
         # text input boxes for progress curve xrange selection
         global start_time
-        start_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[0]), title="Enter Start Time")
+        start_time = TextInput(value=str(experiment_df[list(experiment_df)[
+                               0]].values[0]), title="Enter Start Time")
         global end_time
-        end_time = TextInput(value=str(experiment_df[list(experiment_df)[0]].values[-1]), title='Enter End Time')
+        end_time = TextInput(value=str(experiment_df[list(experiment_df)[
+                             0]].values[-1]), title='Enter End Time')
         start_time.on_change('value', xbox_callback)
         end_time.on_change('value', xbox_callback)
 
         # range slider to select threshold for hit detection in HTS mode
         global threshold_slider
         threshold_slider = Slider(start=0, end=5, value=2, step=0.1,
-                        title='HTS Hit Threshold (Standard Deviation)', width=350)
+                                  title='HTS Hit Threshold (Standard Deviation)', width=350)
         threshold_slider.on_change('value', threshold_callback)
 
         # range slider to update plots according to progress cuve xrange selection
@@ -416,32 +442,36 @@ def load_page(): #experiment_df, experiment_db):
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
         global range_slider
         range_slider = RangeSlider(start=xmin, end=xmax, value=(xmin, xmax),
-                        step=experiment_df[experiment_df.columns[0]].values[1]-xmin,
-                        title='Fine Tune X-Axis Range', width=650)
+                                   step=experiment_df[experiment_df.columns[0]
+                                                      ].values[1]-xmin,
+                                   title='Fine Tune X-Axis Range', width=650)
         range_slider.on_change('value', slider_callback)
 
         # button to upload local data file
         global file_source
-        file_source = ColumnDataSource(data=dict(file_contents = [], file_name = []))
+        file_source = ColumnDataSource(
+            data=dict(file_contents=[], file_name=[]))
         file_source.on_change('data', file_callback)
         try:
             output_filename = file_source.data['file_name']+'-out.csv'
         except:
             output_filename = 'output.csv'
         global upload_button
-        upload_button = Button(label="Upload Local File", button_type="success", width=350)
+        upload_button = Button(label="Upload Local File",
+                               button_type="success", width=350)
         upload_button.js_on_event(events.ButtonClick, CustomJS(args=dict(file_source=file_source),
-                                   code=open(join(dirname(__file__), "upload.js")).read()))
+                                                               code=open(join(dirname(__file__), "upload.js")).read()))
 
         # table containing rate fits and errors
-        template="""
+        template = """
         <div style="background:<%=ct%>"; color="white";>
         <%= value %></div>
         """
         formatter = HTMLTemplateFormatter(template=template)
         columns = [
             TableColumn(field='n', title='Sample'),
-            TableColumn(field='yt', title='Slope (Initial Rate)', formatter=formatter),
+            TableColumn(field='yt', title='Slope (Initial Rate)',
+                        formatter=formatter),
             TableColumn(field='et', title='Std. Error')
         ]
         global rate_table
@@ -450,7 +480,7 @@ def load_page(): #experiment_df, experiment_db):
 
         # tables containing model fits and errors
         global mm_source
-        mm_source = ColumnDataSource(dict(label = [], Km = [], Vmax = []))
+        mm_source = ColumnDataSource(dict(label=[], Km=[], Vmax=[]))
         columns = [
             TableColumn(field='label', title=''),
             TableColumn(field='Vmax', title='Vmax'),
@@ -460,9 +490,10 @@ def load_page(): #experiment_df, experiment_db):
         ]
         global mm_table
         mm_table = DataTable(source=mm_source, columns=columns, width=350, height=75,
-                               selectable=True, editable=True)
+                             selectable=True, editable=True)
         global ic_source
-        ic_source = ColumnDataSource(dict(label = [], Bottom = [], Top = [], Slope = [], p50 = []))
+        ic_source = ColumnDataSource(
+            dict(label=[], Bottom=[], Top=[], Slope=[], p50=[]))
         columns = [
             TableColumn(field='label', title=''),
             TableColumn(field='Bottom', title='Bottom'),
@@ -472,39 +503,43 @@ def load_page(): #experiment_df, experiment_db):
         ]
         global ic_table
         ic_table = DataTable(source=ic_source, columns=columns, width=350, height=75,
-                               selectable=True, editable=True)
+                             selectable=True, editable=True)
 
         # button for copying rate data table to clipboard
         global copy_button
-        copy_button = Button(label="Copy Table to Clipboard", button_type="primary", width=350)
+        copy_button = Button(label="Copy Table to Clipboard",
+                             button_type="primary", width=350)
         copy_button.js_on_event(events.ButtonClick, CustomJS(args=dict(source=model_data_source),
-                                   code=open(join(dirname(__file__), "copy.js")).read()))
+                                                             code=open(join(dirname(__file__), "copy.js")).read()))
 
         # button for downloading rate data table to local csv file
         global download_button
-        download_button = Button(label="Download Table to CSV", button_type="primary", width=350)
+        download_button = Button(
+            label="Download Table to CSV", button_type="primary", width=350)
         download_button.js_on_event(events.ButtonClick, CustomJS(args=dict(source=model_data_source, file_name=output_filename),
-                                   code=open(join(dirname(__file__), "download.js")).read()))
+                                                                 code=open(join(dirname(__file__), "download.js")).read()))
 
         ########## document formatting #########
 
-        desc = Div(text=open(join(dirname(__file__), "description.html")).read(), width=1400)
+        desc = Div(
+            text=open(join(dirname(__file__), "description.html")).read(), width=1400)
 
-        advanced = Div(text="""<strong>Advanced Settings for \npEC50/pIC50 Analysis</strong>""")
+        advanced = Div(
+            text="""<strong>Advanced Settings for \npEC50/pIC50 Analysis</strong>""")
 
         widgets = column(model_select, sample_select, subtract_select,
-                            transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
+                         transform_input, offset_input, advanced, scalex_box, bottom_fix, top_fix, slope_fix)
         table = column(rate_table)
         main_row = row(column(upload_button, widgets),
-                        column(fit_button, row(raw, model), resi, row(start_time, end_time), range_slider),
-                        column(download_button, copy_button, table, mm_table, ic_table, threshold_slider))
+                       column(fit_button, row(raw, model), resi, row(
+                           start_time, end_time), range_slider),
+                       column(download_button, copy_button, table, mm_table, ic_table, threshold_slider))
 
         sizing_mode = 'scale_width'
         l = layout([
             [desc],
             [main_row]
         ], sizing_mode=sizing_mode)
-
         update()
         curdoc().clear()
         curdoc().add_root(l)
@@ -513,41 +548,49 @@ def load_page(): #experiment_df, experiment_db):
         error = str(e)
         error_page(error, 'Error creating page due to:')
 
+
 def file_callback(attrname, old, new):
-        loading = Div(text=open(join(dirname(__file__), "loader.html")).read(), width=1400)
-        l = layout([loading], sizing_mode='scale_both')
-        curdoc().clear()
-        curdoc().add_root(l)
-        curdoc().title = "ICEKAT"
-        curdoc().add_next_tick_callback(file_callback2)
+    loading = Div(
+        text=open(join(dirname(__file__), "loader.html")).read(), width=1400)
+    l = layout([loading], sizing_mode='scale_both')
+    curdoc().clear()
+    curdoc().add_root(l)
+    curdoc().title = "ICEKAT"
+    curdoc().add_next_tick_callback(file_callback2)
+
 
 def file_callback2():
     try:
         # decode data
         raw_contents = file_source.data['file_contents'][0]
         prefix, b64_contents = raw_contents.split(',', 1)
-        file_contents = base64.b64decode(b64_contents).decode('utf-8-sig', errors='ignore')
+        file_contents = base64.b64decode(
+            b64_contents).decode('utf-8-sig', errors='ignore')
         file_io = StringIO(file_contents)
 
         # update dataframe
         global experiment_df
         fname = file_source.data['file_name'][0]
         if fname.split('.')[-1] == 'csv':
-            experiment_df = pd.read_csv(file_io).apply(pd.to_numeric, errors='coerce')
+            experiment_df = pd.read_csv(file_io).apply(
+                pd.to_numeric, errors='coerce')
         else:
-            experiment_df = pd.read_table(file_io, delim_whitespace=True).replace(',', '.', regex=True).apply(pd.to_numeric, errors='coerce')
+            experiment_df = pd.read_table(file_io, delim_whitespace=True).replace(
+                ',', '.', regex=True).apply(pd.to_numeric, errors='coerce')
             experiment_df.columns = experiment_df.columns.str.replace(',', '.')
         experiment_df.columns = [str(i) for i in list(experiment_df)]
         experiment_df = experiment_df.dropna(axis=1, how='all').dropna(axis=0)
+        # drop all columns containg single value
+        experiment_df = experiment_df.loc[:, (experiment_df != experiment_df.iloc[0]).any()]
         experiment_df = experiment_df.drop_duplicates(experiment_df.columns[0])
-        
+
         # update database
         global experiment_db
-        experiment_db = dict(model = 'Michaelis-Menten')
+        experiment_db = dict(model='Michaelis-Menten')
         xmin = experiment_df[experiment_df.columns[0]].values[0]
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
         for s in experiment_df.columns[1:]:
-            #if np.max(experiment_df[s]) > 0.:
+            # if np.max(experiment_df[s]) > 0.:
             df = experiment_df[[experiment_df.columns[0], s]]
             experiment_db[s] = ck.progress_curve(df, xmin, xmax)
             experiment_db[s+'_fit'] = 0
@@ -556,22 +599,25 @@ def file_callback2():
         error = str(e)
         error_page(error, 'Error loading data file due to:')
 
+
 def error_page(error, f):
     function = Div(text=f, width=1400)
     error_message = Div(text=error, width=1400)
     reload = Div(text='Please refresh page to try again.', width=1400)
     spacer = Div(text='', width=1400)
-    l = layout([function], [error_message], [spacer], [reload], sizing_mode='stretch_both')
+    l = layout([function], [error_message], [spacer],
+               [reload], sizing_mode='stretch_both')
     curdoc().clear()
     curdoc().add_root(l)
     curdoc().title = "ICEKAT"
 
 ########## import sample data ##########
 
+
 experiment_file = join(dirname(__file__), 'test.csv')
 experiment_df = pd.read_csv(experiment_file)
 experiment_df.columns = [str(i) for i in list(experiment_df)]
-experiment_db = dict(model = 'Michaelis-Menten')
+experiment_db = dict(model='Michaelis-Menten')
 xmin = experiment_df[experiment_df.columns[0]].values[0]
 xmax = experiment_df[experiment_df.columns[0]].values[-1]
 for s in experiment_df.columns[1:]:
