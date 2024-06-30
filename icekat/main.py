@@ -29,6 +29,7 @@ def sample_callback(attrname, old, new):
     start = float(range_slider.start)
     #stop = float(range_slider.end)
     stop = float(experiment_df[[experiment_df.columns[0], sample]][experiment_df.columns[0]].max())
+    range_slider.value = (start, stop)
     start_e = float(start_time.value)
     stop_e = float(end_time.value)
 
