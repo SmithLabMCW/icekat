@@ -26,10 +26,13 @@ def widget_callback(attrname, old, new):
 def sample_callback(attrname, old, new):
     sample = sample_select.value
 
-    start = float(range_slider.start)
+    #start = float(range_slider.start)
     #stop = float(range_slider.end)
-    stop = float(experiment_df[[experiment_df.columns[0], sample]][experiment_df.columns[0]].max())
+    start = float(experiment_df[[experiment_df.columns[0], sample]].dropna()[experiment_df.columns[0]].min())
+    stop = float(experiment_df[[experiment_df.columns[0], sample]].dropna()[experiment_df.columns[0]].max())
     range_slider.value = (start, stop)
+    start_time.value = str(start)
+    end_time.value = str(stop)
     start_e = float(start_time.value)
     stop_e = float(end_time.value)
 
@@ -425,12 +428,16 @@ def load_page():  # experiment_df, experiment_db):
         slope_fix.on_change('value', widget_callback)
 
         # text input boxes for progress curve xrange selection
+        sample_xmin = experiment_df[[list(experiment_df)[0], 
+                                    list(experiment_df)[-1]]].dropna()[list(experiment_df)[0]].values[0]
+
+        sample_xmax = experiment_df[[list(experiment_df)[0], 
+                                    list(experiment_df)[-1]]].dropna()[list(experiment_df)[0]].values[-1]
+        
         global start_time
-        start_time = TextInput(value=str(experiment_df[list(experiment_df)[
-                               0]].values[0]), title="Enter Start Time")
+        start_time = TextInput(value=str(sample_xmin), title="Enter Start Time")
         global end_time
-        end_time = TextInput(value=str(experiment_df[list(experiment_df)[
-                             0]].values[-1]), title='Enter End Time')
+        end_time = TextInput(value=str(sample_xmax), title='Enter End Time')
         start_time.on_change('value', xbox_callback)
         end_time.on_change('value', xbox_callback)
 
@@ -443,8 +450,9 @@ def load_page():  # experiment_df, experiment_db):
         # range slider to update plots according to progress curve xrange selection
         xmin = experiment_df[experiment_df.columns[0]].values[0]
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
+
         global range_slider
-        range_slider = RangeSlider(start=xmin, end=xmax, value=(xmin, xmax),
+        range_slider = RangeSlider(start=xmin, end=xmax, value=(sample_xmin, sample_xmax),
                                    step=experiment_df[experiment_df.columns[0]
                                                       ].values[1]-xmin,
                                    title='Fine Tune X-Axis Range', width=650)
