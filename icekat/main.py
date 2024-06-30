@@ -24,9 +24,11 @@ def widget_callback(attrname, old, new):
 
 
 def sample_callback(attrname, old, new):
+    sample = sample_select.value
 
     start = float(range_slider.start)
-    stop = float(range_slider.end)
+    #stop = float(range_slider.end)
+    stop = float(experiment_df[[experiment_df.columns[0], sample]][experiment_df.columns[0]].max())
     start_e = float(start_time.value)
     stop_e = float(end_time.value)
 
@@ -437,7 +439,7 @@ def load_page():  # experiment_df, experiment_db):
                                   title='HTS Hit Threshold (Standard Deviation)', width=350)
         threshold_slider.on_change('value', threshold_callback)
 
-        # range slider to update plots according to progress cuve xrange selection
+        # range slider to update plots according to progress curve xrange selection
         xmin = experiment_df[experiment_df.columns[0]].values[0]
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
         global range_slider
