@@ -578,10 +578,10 @@ def file_callback2():
             experiment_df = pd.read_table(file_io, delim_whitespace=True).replace(
                 ',', '.', regex=True).apply(pd.to_numeric, errors='coerce')
             experiment_df.columns = experiment_df.columns.str.replace(',', '.')
+
         experiment_df.columns = [str(i) for i in list(experiment_df)]
-        experiment_df = experiment_df.dropna(axis=1, how='all').dropna(axis=0)
         # drop all columns containg single value
-        experiment_df = experiment_df.loc[:, (experiment_df != experiment_df.iloc[0]).any()]
+        experiment_df = experiment_df.loc[:, experiment_df.nunique() != 1]
         experiment_df = experiment_df.drop_duplicates(experiment_df.columns[0])
 
         # update database
@@ -591,7 +591,7 @@ def file_callback2():
         xmax = experiment_df[experiment_df.columns[0]].values[-1]
         for s in experiment_df.columns[1:]:
             # if np.max(experiment_df[s]) > 0.:
-            df = experiment_df[[experiment_df.columns[0], s]]
+            df = experiment_df[[experiment_df.columns[0], s]].dropna()
             experiment_db[s] = ck.progress_curve(df, xmin, xmax)
             experiment_db[s+'_fit'] = 0
         load_page()
